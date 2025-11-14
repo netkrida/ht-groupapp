@@ -1,0 +1,369 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+    output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
+    // Further reading:
+    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
+    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
+    url      = env("DATABASE_URL")
+}
+
+model Post {
+    id        Int      @id @default(autoincrement())
+    name      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    createdBy   User   @relation(fields: [createdById], references: [id])
+    createdById String
+
+    @@index([name])
+}
+
+// Necessary for Next auth
+model Account {
+    id                       String  @id @default(cuid())
+    userId                   String
+    type                     String
+    provider                 String
+    providerAccountId        String
+    refresh_token            String? // @db.Text
+    access_token             String? // @db.Text
+    expires_at               Int?
+    token_type               String?
+    scope                    String?
+    id_token                 String? // @db.Text
+    session_state            String?
+    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    refresh_token_expires_in Int?
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+    id            String    @id @default(cuid())
+    name          String?
+    email         String?   @unique
+    emailVerified DateTime?
+    image         String?
+    password      String?
+    companyId     String?
+    roleId        String?
+    accounts      Account[]
+    sessions      Session[]
+    posts         Post[]
+    company       Company?  @relation(fields: [companyId], references: [id])
+    role          Role?     @relation(fields: [roleId], references: [id])
+
+    @@index([companyId])
+    @@index([roleId])
+}
+
+model Company {
+    id        String     @id @default(cuid())
+    code      String     @unique
+    name      String
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    users     User[]
+    roles     Role[]
+    suppliers Supplier[]
+    materials Material[]
+    kategoriMaterials KategoriMaterial[]
+    satuanMaterials SatuanMaterial[]
+    transporters Transporter[]
+    penerimaanTBS PenerimaanTBS[]
+    stockMaterials StockMaterial[]
+
+    @@index([code])
+}
+
+model Role {
+    id          String   @id @default(cuid())
+    name        String
+    description String?
+    permissions Json?
+    companyId   String
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    users       User[]
+
+    @@unique([name, companyId])
+    @@index([companyId])
+    @@index([name])
+}
+
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
+}
+
+// Enums for Supplier
+enum SupplierType {
+    RAMP_PERON
+    KUD
+    KELOMPOK_TANI
+}
+
+enum CertificationType {
+    ISPO
+    RSPO
+}
+
+enum TaxStatus {
+    NON_PKP
+    PKP_11
+    PKP_1_1
+}
+
+enum SalesChannel {
+    LANGSUNG_PKS
+    AGEN
+}
+
+enum TransportationType {
+    MILIK_SENDIRI
+    JASA_PIHAK_KE_3
+}
+
+// Model Supplier TBS untuk PT PKS
+model Supplier {
+    id          String       @id @default(cuid())
+    companyId   String
+    type        SupplierType
+    
+    // Identitas
+    ownerName         String
+    address           String
+    companyPhone      String?
+    personalPhone     String
+    companyName       String?
+    rampPeronAddress  String?
+    
+    // Profil Kebun (JSON array)
+    gardenProfiles    Json // Array of { tahunTanam, luasKebun, estimasiSupplyTBS }
+    
+    // Lokasi
+    longitude         Float
+    latitude          Float
+    
+    // Tipe Pengelolaan Kebun
+    swadaya           Boolean  @default(false)
+    kelompok          Boolean  @default(false)
+    perusahaan        Boolean  @default(false)
+    jenisBibit        String?
+    certificationISPO Boolean  @default(false)
+    certificationRSPO Boolean  @default(false)
+    
+    // Profil Izin Usaha
+    aktePendirian     String?
+    aktePerubahan     String?
+    nib               String?
+    siup              String?
+    npwp              String?
+    
+    // Penjualan TBS
+    salesChannel      SalesChannel?
+    salesChannelDetails String?
+    
+    // Transportasi
+    transportation    TransportationType?
+    transportationUnits Int?
+    
+    // Informasi Rekening
+    bankName          String?
+    accountNumber     String?
+    
+    // Status Pajak
+    taxStatus         TaxStatus?
+    
+    createdAt         DateTime @default(now())
+    updatedAt         DateTime @updatedAt
+    company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    penerimaanTBS     PenerimaanTBS[]
+    supplierTransporters SupplierTransporter[]
+    
+    @@index([companyId])
+    @@index([type])
+}
+
+// Model Kategori Material
+model KategoriMaterial {
+    id          String     @id @default(cuid())
+    companyId   String
+    name        String
+    description String?
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+    company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    materials   Material[]
+    
+    @@unique([name, companyId])
+    @@index([companyId])
+}
+
+// Model Satuan Material
+model SatuanMaterial {
+    id        String     @id @default(cuid())
+    companyId String
+    name      String     // kg, ton, liter, etc
+    symbol    String     // simbol satuan
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    materials Material[]
+    
+    @@unique([name, companyId])
+    @@index([companyId])
+}
+
+// Model Material/Barang
+model Material {
+    id          String           @id @default(cuid())
+    companyId   String
+    kategoriId  String
+    satuanId    String
+    name        String
+    code        String           @unique
+    description String?
+    createdAt   DateTime         @default(now())
+    updatedAt   DateTime         @updatedAt
+    company     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    kategori    KategoriMaterial @relation(fields: [kategoriId], references: [id], onDelete: Cascade)
+    satuan      SatuanMaterial   @relation(fields: [satuanId], references: [id], onDelete: Cascade)
+    stockMaterial StockMaterial[]
+    penerimaanTBS PenerimaanTBS[]
+    
+    @@index([companyId])
+    @@index([kategoriId])
+    @@index([satuanId])
+}
+
+// Model Pengirim/Transporter
+model Transporter {
+    id           String        @id @default(cuid())
+    companyId    String
+    nomorKendaraan String
+    namaSupir    String
+    telepon      String?
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
+    company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    penerimaanTBS PenerimaanTBS[]
+    supplierTransporters SupplierTransporter[]
+    
+    @@unique([nomorKendaraan, companyId])
+    @@index([companyId])
+}
+
+// Junction table untuk relasi many-to-many Supplier dan Transporter
+model SupplierTransporter {
+    id            String      @id @default(cuid())
+    supplierId    String
+    transporterId String
+    createdAt     DateTime    @default(now())
+    supplier      Supplier    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+    transporter   Transporter @relation(fields: [transporterId], references: [id], onDelete: Cascade)
+    
+    @@unique([supplierId, transporterId])
+    @@index([supplierId])
+    @@index([transporterId])
+}
+
+// Enum untuk status penerimaan
+enum StatusPenerimaan {
+    DRAFT
+    COMPLETED
+    CANCELLED
+}
+
+// Enum untuk metode input timbangan
+enum MetodeInput {
+    MANUAL
+    SISTEM_TIMBANGAN
+}
+
+// Model Penerimaan TBS
+model PenerimaanTBS {
+    id                String           @id @default(cuid())
+    companyId         String
+    nomorPenerimaan   String           @unique
+    tanggalTerima     DateTime
+    materialId        String
+    operatorPenimbang String           // username dari user yang login
+    supplierId        String
+    transporterId     String
+    
+    // Timbangan
+    beratBruto        Float
+    waktuTimbangBruto DateTime
+    metodeBruto       MetodeInput      @default(MANUAL)
+    
+    beratTarra        Float
+    waktuTimbangTarra DateTime
+    metodeTarra       MetodeInput      @default(MANUAL)
+    
+    beratNetto1       Float            // bruto - tarra (auto kalkulasi)
+    
+    // Potongan
+    potonganPersen    Float            @default(0)
+    potonganKg        Float            @default(0) // auto kalkulasi dari potonganPersen
+    
+    beratNetto2       Float            // netto1 - potonganKg (final)
+    
+    // Harga
+    hargaPerKg        Float
+    totalBayar        Float            // netto2 * hargaPerKg
+    
+    status            StatusPenerimaan @default(DRAFT)
+    
+    createdAt         DateTime         @default(now())
+    updatedAt         DateTime         @updatedAt
+    
+    company           Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    material          Material         @relation(fields: [materialId], references: [id], onDelete: Cascade)
+    supplier          Supplier         @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+    transporter       Transporter      @relation(fields: [transporterId], references: [id], onDelete: Cascade)
+    
+    @@index([companyId])
+    @@index([materialId])
+    @@index([supplierId])
+    @@index([transporterId])
+    @@index([tanggalTerima])
+    @@index([status])
+}
+
+// Model Stock Material
+model StockMaterial {
+    id         String   @id @default(cuid())
+    companyId  String
+    materialId String
+    jumlah     Float    @default(0)
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+    
+    @@unique([companyId, materialId])
+    @@index([companyId])
+    @@index([materialId])
+}
