@@ -7,3 +7,21 @@ services:
       - .env
     ports:
       - "3000:3000"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    container_name: htgroup-db
+    restart: always
+    environment:
+      POSTGRES_USER: htgroupuser
+      POSTGRES_PASSWORD: htgroupsecretpassword
+      POSTGRES_DB: htgroupdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"   # optional: kalau mau akses dari luar server/pgAdmin
+
+volumes:
+  pgdata:
