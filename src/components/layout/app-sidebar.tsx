@@ -94,11 +94,8 @@ const companyMenus: Record<string, MenuItem[]> = {
       roles: ["Admin", "Staff Gudang"],
       items: [
         { title: "Stock TBS", url: "/dashboard/pt-pks/gudang/stock-tbs" },
-        { title: "Stock CPO", url: "/dashboard/pt-pks/gudang/stock-cpo" },
-        { title: "Stock Kernel", url: "/dashboard/pt-pks/gudang/stock-kernel" },
-        { title: "Stock By-Product", url: "/dashboard/pt-pks/gudang/stock-byproduct" }, // Cangkang + Fiber
+        { title: "Stock Product", url: "/dashboard/pt-pks/gudang/stock-product" },
         { title: "Stock Movement", url: "/dashboard/pt-pks/gudang/stock-movement" },
-        { title: "Stock Opname", url: "/dashboard/pt-pks/gudang/stock-opname" },
       ],
     },
     

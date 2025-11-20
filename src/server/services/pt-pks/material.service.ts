@@ -102,6 +102,10 @@ export class MaterialService {
     return materialRepository.getStockMaterial(companyId, materialId);
   }
 
+  async getStockByMaterialId(companyId: string, materialId: string) {
+    return materialRepository.getStockMaterial(companyId, materialId);
+  }
+
   async getStockMaterialsByCompany(companyId: string) {
     return materialRepository.getStockMaterialsByCompany(companyId);
   }

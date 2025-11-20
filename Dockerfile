@@ -8,6 +8,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 RUN npm install
 
+
 # Copy kode project
 COPY . .
 

@@ -89,6 +89,8 @@ model Company {
     transporters Transporter[]
     penerimaanTBS PenerimaanTBS[]
     stockMaterials StockMaterial[]
+    prosesProduksi ProsesProduksi[]
+    tangki Tangki[]
 
     @@index([code])
 }
@@ -252,6 +254,9 @@ model Material {
     satuan      SatuanMaterial   @relation(fields: [satuanId], references: [id], onDelete: Cascade)
     stockMaterial StockMaterial[]
     penerimaanTBS PenerimaanTBS[]
+    prosesProduksiInput ProsesProduksi[] @relation("ProsesProduksiInput")
+    hasilProduksiOutput HasilProduksi[] @relation("HasilProduksiOutput")
+    tangki Tangki[]
     
     @@index([companyId])
     @@index([kategoriId])
@@ -366,4 +371,108 @@ model StockMaterial {
     @@unique([companyId, materialId])
     @@index([companyId])
     @@index([materialId])
+}
+
+// Enum untuk status proses produksi
+enum StatusProsesProduksi {
+    DRAFT
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+}
+
+// Model Proses Produksi
+model ProsesProduksi {
+    id                String               @id @default(cuid())
+    companyId         String
+    nomorProduksi     String               @unique
+    tanggalProduksi   DateTime
+    operatorProduksi  String               // username dari user yang login
+    
+    // Material Input (TBS)
+    materialInputId   String               // Material TBS yang akan diolah
+    jumlahInput       Float                // Total TBS yang akan diolah (dalam kg/ton)
+    
+    status            StatusProsesProduksi @default(DRAFT)
+    
+    createdAt         DateTime             @default(now())
+    updatedAt         DateTime             @updatedAt
+    
+    company           Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    materialInput     Material             @relation("ProsesProduksiInput", fields: [materialInputId], references: [id], onDelete: Cascade)
+    hasilProduksi     HasilProduksi[]
+    
+    @@index([companyId])
+    @@index([materialInputId])
+    @@index([tanggalProduksi])
+    @@index([status])
+}
+
+// Model Hasil Produksi (Output dari proses produksi)
+model HasilProduksi {
+    id                String          @id @default(cuid())
+    prosesProduksiId  String
+    materialOutputId  String          // Material hasil produksi (CPO, Kernel, dll)
+    jumlahOutput      Float           // Total hasil produksi (dalam kg/ton)
+    rendemen          Float           // Rendemen dalam persen (jumlahOutput / jumlahInput * 100)
+    
+    createdAt         DateTime        @default(now())
+    updatedAt         DateTime        @updatedAt
+    
+    prosesProduksi    ProsesProduksi  @relation(fields: [prosesProduksiId], references: [id], onDelete: Cascade)
+    materialOutput    Material        @relation("HasilProduksiOutput", fields: [materialOutputId], references: [id], onDelete: Cascade)
+    
+    @@index([prosesProduksiId])
+    @@index([materialOutputId])
+}
+
+// Model Tangki (Tank) untuk penyimpanan hasil produksi
+model Tangki {
+    id          String   @id @default(cuid())
+    companyId   String
+    materialId  String   // Material yang disimpan (CPO, Kernel, dll)
+    namaTangki  String   // Nama tangki (T-001, Tank A, dll)
+    kapasitas   Float    // Kapasitas maksimal tangki (dalam kg/liter)
+    isiSaatIni  Float    @default(0) // Isi tangki saat ini
+    
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    
+    company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    material    Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+    riwayatStockTangki StockTangki[]
+    
+    @@unique([companyId, namaTangki])
+    @@index([companyId])
+    @@index([materialId])
+}
+
+// Enum untuk tipe transaksi stock tangki
+enum TipeTransaksiTangki {
+    MASUK      // Dari hasil produksi
+    KELUAR     // Untuk pengiriman/penjualan
+    TRANSFER   // Transfer antar tangki
+    ADJUSTMENT // Penyesuaian stock
+}
+
+// Model Riwayat Stock Tangki
+model StockTangki {
+    id                String              @id @default(cuid())
+    tangkiId          String
+    tipeTransaksi     TipeTransaksiTangki
+    jumlah            Float               // Jumlah yang masuk/keluar
+    stockSebelum      Float               // Stock sebelum transaksi
+    stockSesudah      Float               // Stock setelah transaksi
+    referensi         String?             // Nomor referensi (nomor produksi, DO, dll)
+    keterangan        String?             // Keterangan tambahan
+    operator          String              // Username operator
+    tanggalTransaksi  DateTime            @default(now())
+    
+    createdAt         DateTime            @default(now())
+    
+    tangki            Tangki              @relation(fields: [tangkiId], references: [id], onDelete: Cascade)
+    
+    @@index([tangkiId])
+    @@index([tanggalTransaksi])
+    @@index([tipeTransaksi])
 }
