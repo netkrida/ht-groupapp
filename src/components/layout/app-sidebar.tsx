@@ -106,9 +106,7 @@ const companyMenus: Record<string, MenuItem[]> = {
       icon: ShoppingCart,
       roles: ["Admin", "Manager Marketing", "Staff Marketing"],
       items: [
-        { title: "Penjualan CPO", url: "/dashboard/pt-pks/pemasaran/penjualan-cpo" },
-        { title: "Penjualan Kernel", url: "/dashboard/pt-pks/pemasaran/penjualan-kernel" },
-        { title: "Penjualan By-Product", url: "/dashboard/pt-pks/pemasaran/penjualan-byproduct" }, // 🔄 Gabung Cangkang + Fiber
+        { title: "Penjualan Product", url: "/dashboard/pt-pks/pemasaran/penjualan-product" }, // 🔄 Gabung Cangkang + Fiber
         { title: "Piutang Customer", url: "/dashboard/pt-pks/pemasaran/piutang-customer" },
         { title: "Pembayaran Customer", url: "/dashboard/pt-pks/pemasaran/pembayaran-customer" }, // 🆕
       ],

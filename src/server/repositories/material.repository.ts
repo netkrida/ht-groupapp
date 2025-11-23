@@ -106,6 +106,24 @@ export class MaterialRepository {
     });
   }
 
+  async getMaterialsForDropdown(companyId: string) {
+    return db.material.findMany({
+      where: { companyId },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        satuan: {
+          select: {
+            name: true,
+            symbol: true,
+          },
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+  }
+
   async getMaterialById(id: string) {
     return db.material.findUnique({
       where: { id },

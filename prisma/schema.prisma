@@ -91,6 +91,8 @@ model Company {
     stockMaterials StockMaterial[]
     prosesProduksi ProsesProduksi[]
     tangki Tangki[]
+    buyers Buyer[]
+    contracts Contract[]
 
     @@index([code])
 }
@@ -257,6 +259,7 @@ model Material {
     prosesProduksiInput ProsesProduksi[] @relation("ProsesProduksiInput")
     hasilProduksiOutput HasilProduksi[] @relation("HasilProduksiOutput")
     tangki Tangki[]
+    contractItems ContractItem[]
     
     @@index([companyId])
     @@index([kategoriId])
@@ -475,4 +478,119 @@ model StockTangki {
     @@index([tangkiId])
     @@index([tanggalTransaksi])
     @@index([tipeTransaksi])
+}
+
+// Enum untuk status buyer
+enum StatusBuyer {
+    ACTIVE
+    INACTIVE
+}
+
+// Model Buyer (Pembeli)
+model Buyer {
+    id              String       @id @default(cuid())
+    companyId       String
+    
+    // Informasi Umum
+    code            String       @unique // Kode buyer (auto-generated atau manual)
+    name            String       // Nama perusahaan/buyer
+    contactPerson   String       // Nama contact person
+    email           String?      // Email buyer
+    phone           String       // Nomor telepon
+    address         String       // Alamat lengkap
+    
+    // Informasi Pajak
+    npwp            String?      // NPWP buyer
+    taxStatus       TaxStatus    // Status pajak (NON_PKP, PKP_11, PKP_1_1)
+    
+    // Informasi Rekening
+    bankName        String?      // Nama bank
+    accountNumber   String?      // Nomor rekening
+    accountName     String?      // Nama pemilik rekening
+    
+    // Status
+    status          StatusBuyer  @default(ACTIVE)
+    
+    createdAt       DateTime     @default(now())
+    updatedAt       DateTime     @updatedAt
+    
+    company         Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    contracts       Contract[]
+    
+    @@index([companyId])
+    @@index([code])
+    @@index([status])
+}
+
+// Enum untuk status kontrak
+enum StatusContract {
+    DRAFT
+    ACTIVE
+    COMPLETED
+    CANCELLED
+}
+
+// Model Contract (Kontrak Pembelian)
+model Contract {
+    id                  String         @id @default(cuid())
+    companyId           String
+    buyerId             String
+    
+    // Informasi Kontrak
+    contractNumber      String         @unique // Nomor kontrak (auto-generated)
+    contractDate        DateTime       // Tanggal kontrak dibuat
+    startDate           DateTime       // Tanggal mulai kontrak
+    endDate             DateTime       // Tanggal berakhir kontrak
+    
+    // Informasi Pengiriman
+    deliveryDate        DateTime       // Tanggal pengiriman
+    deliveryAddress     String         // Alamat pengiriman
+    
+    // Harga dan Pajak
+    subtotal            Float          @default(0) // Total sebelum pajak (auto-calculated)
+    taxAmount           Float          @default(0) // Jumlah pajak (auto-calculated based on buyer taxStatus)
+    totalAmount         Float          @default(0) // Total setelah pajak (auto-calculated)
+    
+    // Status
+    status              StatusContract @default(DRAFT)
+    
+    // Catatan
+    notes               String?        // Catatan tambahan
+    
+    createdAt           DateTime       @default(now())
+    updatedAt           DateTime       @updatedAt
+    
+    company             Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    buyer               Buyer          @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+    contractItems       ContractItem[]
+    
+    @@index([companyId])
+    @@index([buyerId])
+    @@index([contractNumber])
+    @@index([status])
+    @@index([deliveryDate])
+}
+
+// Model ContractItem (Item dalam Kontrak)
+model ContractItem {
+    id          String   @id @default(cuid())
+    contractId  String
+    materialId  String
+    
+    // Detail Item
+    quantity    Float    // Jumlah/kuantitas
+    unitPrice   Float    // Harga per satuan
+    totalPrice  Float    // Total harga item (quantity * unitPrice) - auto-calculated
+    
+    // Catatan
+    notes       String?  // Catatan untuk item ini
+    
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    
+    contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+    material    Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+    
+    @@index([contractId])
+    @@index([materialId])
 }

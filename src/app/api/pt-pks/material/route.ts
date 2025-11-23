@@ -6,11 +6,22 @@ import {
   updateMaterialSchema,
 } from "@/server/schema/material";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.company?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const dropdown = searchParams.get("dropdown");
+
+    // If dropdown parameter is present, return simplified data for dropdowns
+    if (dropdown === "true") {
+      const materials = await materialService.getMaterialsForDropdown(
+        session.user.company.id
+      );
+      return NextResponse.json({ materials });
     }
 
     const materials = await materialService.getMaterialsByCompany(

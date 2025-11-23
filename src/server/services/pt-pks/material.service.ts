@@ -74,6 +74,10 @@ export class MaterialService {
     return materialRepository.getMaterialsByCompany(companyId);
   }
 
+  async getMaterialsForDropdown(companyId: string) {
+    return materialRepository.getMaterialsForDropdown(companyId);
+  }
+
   async getMaterialById(id: string) {
     const material = await materialRepository.getMaterialById(id);
     if (!material) {
