@@ -23,13 +23,6 @@ type TransporterDetail = {
   nomorKendaraan: string;
   namaSupir: string;
   telepon?: string | null;
-  supplierTransporters: Array<{
-    supplier: {
-      id: string;
-      ownerName: string;
-      type: string;
-    };
-  }>;
   penerimaanTBS: Array<{
     id: string;
     nomorPenerimaan: string;
@@ -102,23 +95,6 @@ export function TransporterDetail({ transporterId, onBack }: TransporterDetailPr
               <div className="text-sm text-muted-foreground">Telepon</div>
               <div className="font-medium">{transporter.telepon || "-"}</div>
             </div>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-2">Supplier Terkait</h3>
-            {transporter.supplierTransporters.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Belum terhubung dengan supplier
-              </p>
-            ) : (
-              <div className="space-y-1">
-                {transporter.supplierTransporters.map((st) => (
-                  <div key={st.supplier.id} className="text-sm">
-                    • {st.supplier.ownerName} ({st.supplier.type})
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           <div>

@@ -93,6 +93,7 @@ model Company {
     tangki Tangki[]
     buyers Buyer[]
     contracts Contract[]
+    vendors Vendor[]
 
     @@index([code])
 }
@@ -319,6 +320,8 @@ model PenerimaanTBS {
     materialId        String
     operatorPenimbang String           // username dari user yang login
     supplierId        String
+    lokasiKebun       String?          // Lokasi kebun supplier
+    jenisBuah         String?          // TBS-BB (Buah Besar), TBS-BS (Buah Biasa), TBS-BK (Buah Kecil)
     transporterId     String
     
     // Timbangan
@@ -486,7 +489,13 @@ enum StatusBuyer {
     INACTIVE
 }
 
-// Model Buyer (Pembeli)
+// Enum untuk status vendor
+enum StatusVendor {
+    ACTIVE
+    INACTIVE
+}
+
+// Model Buyer (Pembeli/Customer)
 model Buyer {
     id              String       @id @default(cuid())
     companyId       String
@@ -593,4 +602,66 @@ model ContractItem {
     
     @@index([contractId])
     @@index([materialId])
+}
+
+// Model Vendor (Vendor Transportir/Perusahaan)
+model Vendor {
+    id              String          @id @default(cuid())
+    companyId       String
+    
+    // Informasi Umum
+    code            String          @unique // Kode vendor (auto-generated)
+    name            String          // Nama vendor/perusahaan transportir
+    contactPerson   String          // Nama contact person
+    email           String?         // Email vendor
+    phone           String          // Nomor telepon
+    address         String          // Alamat lengkap
+    
+    // Informasi Pajak
+    npwp            String?         // NPWP vendor
+    taxStatus       TaxStatus       // Status pajak (NON_PKP, PKP_11, PKP_1_1)
+    
+    // Informasi Rekening
+    bankName        String?         // Nama bank
+    accountNumber   String?         // Nomor rekening
+    accountName     String?         // Nama pemilik rekening
+    
+    // Status
+    status          StatusVendor    @default(ACTIVE)
+    
+    createdAt       DateTime        @default(now())
+    updatedAt       DateTime        @updatedAt
+    
+    company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    vehicles        VendorVehicle[] // Relasi ke kendaraan
+    
+    @@index([companyId])
+    @@index([code])
+    @@index([status])
+}
+
+// Model VendorVehicle (Kendaraan dan Supir milik Vendor)
+model VendorVehicle {
+    id              String       @id @default(cuid())
+    vendorId        String
+    
+    // Informasi Kendaraan
+    nomorKendaraan  String       // Nomor polisi kendaraan
+    jenisKendaraan  String?      // Jenis kendaraan (Truk, Trailer, dll)
+    
+    // Informasi Supir
+    namaSupir       String       // Nama supir
+    noHpSupir       String?      // Nomor HP supir
+    
+    // Status
+    status          StatusVendor @default(ACTIVE)
+    
+    createdAt       DateTime     @default(now())
+    updatedAt       DateTime     @updatedAt
+    
+    vendor          Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+    
+    @@unique([nomorKendaraan, vendorId])
+    @@index([vendorId])
+    @@index([status])
 }

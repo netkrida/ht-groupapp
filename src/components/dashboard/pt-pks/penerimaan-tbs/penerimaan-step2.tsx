@@ -145,6 +145,22 @@ export function PenerimaanStep2({ data, onUpdate, onNext, onBack }: Step2Props) 
               <div className="text-sm text-muted-foreground">Kendaraan</div>
               <div className="font-medium">{transporter || "Loading..."}</div>
             </div>
+            {data.lokasiKebun && (
+              <div>
+                <div className="text-sm text-muted-foreground">Lokasi Kebun</div>
+                <div className="font-medium">{data.lokasiKebun}</div>
+              </div>
+            )}
+            {data.jenisBuah && (
+              <div>
+                <div className="text-sm text-muted-foreground">Jenis Buah</div>
+                <div className="font-medium">
+                  {data.jenisBuah === "TBS-BB" && "Buah Besar (TBS-BB)"}
+                  {data.jenisBuah === "TBS-BS" && "Buah Biasa (TBS-BS)"}
+                  {data.jenisBuah === "TBS-BK" && "Buah Kecil (TBS-BK)"}
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

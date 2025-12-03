@@ -57,8 +57,10 @@ export function PenerimaanStep1({ data, onUpdate, onNext }: Step1Props) {
   const [formData, setFormData] = useState({
     materialId: data.materialId || "",
     supplierId: data.supplierId || "",
+    lokasiKebun: data.lokasiKebun || "",
+    jenisBuah: data.jenisBuah || ("" as "TBS-BB" | "TBS-BS" | "TBS-BK" | ""),
     transporterType: data.transporterType || "existing" as "existing" | "new",
-    transporterId: data.transporterId || "",
+    transporterId: data.transporterId,
     nomorKendaraan: data.nomorKendaraan || "",
     namaSupir: data.namaSupir || "",
   });
@@ -172,6 +174,7 @@ export function PenerimaanStep1({ data, onUpdate, onNext }: Step1Props) {
     const now = new Date();
     onUpdate({
       ...formData,
+      jenisBuah: formData.jenisBuah || undefined,
       tanggalTerima: now,
       operatorPenimbang: userName || "Operator",
     });
@@ -306,6 +309,62 @@ export function PenerimaanStep1({ data, onUpdate, onNext }: Step1Props) {
         </div>
       </div>
 
+      {/* Lokasi Kebun & Jenis Buah Section */}
+      {formData.supplierId && (
+        <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+          <h3 className="font-semibold">Informasi Kebun</h3>
+          
+          <div className="space-y-2">
+            <Label htmlFor="lokasiKebun">Lokasi Kebun (Opsional)</Label>
+            <Input
+              id="lokasiKebun"
+              placeholder="Contoh: Kebun Blok A, Desa Suka Maju"
+              value={formData.lokasiKebun}
+              onChange={(e) =>
+                setFormData({ ...formData, lokasiKebun: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Jenis Buah (Opsional)</Label>
+            <RadioGroup
+              value={formData.jenisBuah}
+              onValueChange={(value) =>
+                setFormData({
+                  ...formData,
+                  jenisBuah: value as "TBS-BB" | "TBS-BS" | "TBS-BK",
+                })
+              }
+            >
+              <div className="grid grid-cols-3 gap-3">
+                <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-accent cursor-pointer">
+                  <RadioGroupItem value="TBS-BB" id="tbs-bb" />
+                  <Label htmlFor="tbs-bb" className="font-normal cursor-pointer flex-1">
+                    <div className="font-medium">Buah Besar</div>
+                    <div className="text-xs text-muted-foreground">TBS-BB</div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-accent cursor-pointer">
+                  <RadioGroupItem value="TBS-BS" id="tbs-bs" />
+                  <Label htmlFor="tbs-bs" className="font-normal cursor-pointer flex-1">
+                    <div className="font-medium">Buah Biasa</div>
+                    <div className="text-xs text-muted-foreground">TBS-BS</div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-accent cursor-pointer">
+                  <RadioGroupItem value="TBS-BK" id="tbs-bk" />
+                  <Label htmlFor="tbs-bk" className="font-normal cursor-pointer flex-1">
+                    <div className="font-medium">Buah Kecil</div>
+                    <div className="text-xs text-muted-foreground">TBS-BK</div>
+                  </Label>
+                </div>
+              </div>
+            </RadioGroup>
+          </div>
+        </div>
+      )}
+
       {/* Kendaraan & Supir Section */}
       {formData.supplierId && (
         <div className="space-y-4 p-4 border rounded-lg">
@@ -317,7 +376,7 @@ export function PenerimaanStep1({ data, onUpdate, onNext }: Step1Props) {
               setFormData({
                 ...formData,
                 transporterType: value as "existing" | "new",
-                transporterId: "",
+                transporterId: value === "new" ? undefined : "",
                 nomorKendaraan: "",
                 namaSupir: "",
               })
@@ -394,10 +453,10 @@ export function PenerimaanStep1({ data, onUpdate, onNext }: Step1Props) {
                           </div>
                         </div>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => {
-                            setFormData({ ...formData, transporterId: "" });
+                            setFormData({ ...formData, transporterId: undefined });
                           }}
                         >
                           Ubah

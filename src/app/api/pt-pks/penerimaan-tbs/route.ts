@@ -53,6 +53,23 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     
+    // Validasi transporterType
+    if (body.transporterType === "existing" && !body.transporterId) {
+      return NextResponse.json(
+        { error: "Transporter harus dipilih" },
+        { status: 400 }
+      );
+    }
+
+    if (body.transporterType === "new") {
+      if (!body.nomorKendaraan || !body.namaSupir) {
+        return NextResponse.json(
+          { error: "Nomor kendaraan dan nama supir harus diisi" },
+          { status: 400 }
+        );
+      }
+    }
+    
     // Parse dates from string to Date objects
     const parsedBody = {
       ...body,
@@ -68,6 +85,8 @@ export async function POST(request: Request) {
       session.user.company.id,
       {
         ...data,
+        lokasiKebun: body.lokasiKebun,
+        jenisBuah: body.jenisBuah,
         transporterType: body.transporterType,
         nomorKendaraan: body.nomorKendaraan,
         namaSupir: body.namaSupir,

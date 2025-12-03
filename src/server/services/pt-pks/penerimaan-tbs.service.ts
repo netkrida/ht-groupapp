@@ -31,9 +31,6 @@ export class PenerimaanTBSService {
           namaSupir: data.namaSupir,
         });
         transporterId = newTransporter.id;
-
-        // Link transporter to supplier
-        await transporterRepository.linkSupplierToTransporter(data.supplierId, transporterId);
       }
     }
 
@@ -141,12 +138,30 @@ export class PenerimaanTBSService {
 
   // Statistics
   async getTBSStatistics(companyId: string, materialId: string) {
-    const [tbsHariIni, tbsBulanIni, stockMaterial, tbsBySupplier] = await Promise.all([
+    const [tbsHariIni, tbsBulanIni, stockMaterial, tbsBySupplierRaw] = await Promise.all([
       penerimaanTBSRepository.getTBSMasukHariIni(companyId, materialId),
       penerimaanTBSRepository.getTBSMasukBulanIni(companyId, materialId),
       materialRepository.getStockMaterial(companyId, materialId),
       penerimaanTBSRepository.getTBSBySupplier(companyId, materialId),
     ]);
+
+    // Ambil semua supplier yang muncul di groupBy
+    const supplierIds = tbsBySupplierRaw.map((item: any) => item.supplierId).filter(Boolean);
+    let supplierMap: Record<string, any> = {};
+    if (supplierIds.length > 0) {
+      const suppliers = await import("@/server/db").then(({ db }) =>
+        db.supplier.findMany({
+          where: { id: { in: supplierIds } },
+        })
+      );
+      supplierMap = Object.fromEntries(suppliers.map((s: any) => [s.id, s]));
+    }
+
+    // Gabungkan info supplier ke hasil groupBy
+    const tbsBySupplier = tbsBySupplierRaw.map((item: any) => ({
+      ...item,
+      supplier: supplierMap[item.supplierId] || null,
+    }));
 
     return {
       tbsHariIni,

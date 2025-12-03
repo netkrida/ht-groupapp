@@ -13,6 +13,8 @@ export type PenerimaanFormData = {
   materialId: string;
   operatorPenimbang: string;
   supplierId: string;
+  lokasiKebun?: string;
+  jenisBuah?: "TBS-BB" | "TBS-BS" | "TBS-BK";
   transporterType: "existing" | "new";
   transporterId?: string;
   nomorKendaraan?: string;

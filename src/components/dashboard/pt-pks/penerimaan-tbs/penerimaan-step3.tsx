@@ -144,6 +144,22 @@ export function PenerimaanStep3({ data, onUpdate, onNext, onBack }: Step3Props) 
               <div className="text-sm text-muted-foreground">Berat Bruto</div>
               <div className="font-bold text-primary">{beratBruto.toLocaleString("id-ID")} kg</div>
             </div>
+            {data.lokasiKebun && (
+              <div>
+                <div className="text-sm text-muted-foreground">Lokasi Kebun</div>
+                <div className="font-medium text-sm">{data.lokasiKebun}</div>
+              </div>
+            )}
+            {data.jenisBuah && (
+              <div>
+                <div className="text-sm text-muted-foreground">Jenis Buah</div>
+                <div className="font-medium text-sm">
+                  {data.jenisBuah === "TBS-BB" && "Buah Besar (TBS-BB)"}
+                  {data.jenisBuah === "TBS-BS" && "Buah Biasa (TBS-BS)"}
+                  {data.jenisBuah === "TBS-BK" && "Buah Kecil (TBS-BK)"}
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

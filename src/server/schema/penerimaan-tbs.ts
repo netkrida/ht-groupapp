@@ -6,6 +6,8 @@ export const penerimaanStep1Schema = z.object({
   materialId: z.string().min(1, "Produk harus dipilih"),
   operatorPenimbang: z.string().min(1, "Operator harus diisi"),
   supplierId: z.string().min(1, "Supplier harus dipilih"),
+  lokasiKebun: z.string().optional(),
+  jenisBuah: z.enum(["TBS-BB", "TBS-BS", "TBS-BK"]).optional(),
   // Untuk kendaraan & supir
   transporterType: z.enum(["existing", "new"]),
   transporterId: z.string().optional(), // jika pilih existing
@@ -41,7 +43,9 @@ export const createPenerimaanTBSSchema = z.object({
   materialId: z.string().min(1, "Produk harus dipilih"),
   operatorPenimbang: z.string().min(1, "Operator harus diisi"),
   supplierId: z.string().min(1, "Supplier harus dipilih"),
-  transporterId: z.string().min(1, "Transporter harus dipilih"),
+  lokasiKebun: z.string().optional(),
+  jenisBuah: z.enum(["TBS-BB", "TBS-BS", "TBS-BK"]).optional(),
+  transporterId: z.string().optional(), // Optional karena bisa dibuat baru (transporterType = "new")
   
   // Step 2
   metodeBruto: z.enum(["MANUAL", "SISTEM_TIMBANGAN"]),

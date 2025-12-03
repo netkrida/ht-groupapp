@@ -20,14 +20,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, FileText, Download, Filter } from "lucide-react";
+import { Search, FileText, Download, Filter, Eye, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { PenerimaanDetailView } from "./penerimaan-detail-view";
 
 type PembayaranData = {
   id: string;
   nomorPenerimaan: string;
   tanggalTerima: string;
   operatorPenimbang: string;
+  lokasiKebun?: string | null;
+  jenisBuah?: string | null;
   beratBruto: number;
   beratTarra: number;
   beratNetto1: number;
@@ -64,6 +67,8 @@ export function PembayaranSupplierTable() {
   const [filterSupplier, setFilterSupplier] = useState("all");
   const [filterDate, setFilterDate] = useState("");
   const [suppliers, setSuppliers] = useState<Array<{ id: string; ownerName: string }>>([]);
+  const [selectedItem, setSelectedItem] = useState<PembayaranData | null>(null);
+  const [showDetail, setShowDetail] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -202,6 +207,20 @@ export function PembayaranSupplierTable() {
           <div className="text-center py-8">Memuat data...</div>
         </CardContent>
       </Card>
+    );
+  }
+
+  // Show detail view
+  if (showDetail && selectedItem) {
+    return (
+      <PenerimaanDetailView
+        data={selectedItem}
+        onBack={() => {
+          setShowDetail(false);
+          setSelectedItem(null);
+        }}
+        onRefresh={fetchData}
+      />
     );
   }
 
@@ -364,24 +383,22 @@ export function PembayaranSupplierTable() {
                     <TableHead className="w-[140px]">No. Penerimaan</TableHead>
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Supplier</TableHead>
+                    <TableHead>Lokasi Kebun</TableHead>
+                    <TableHead>Jenis Buah</TableHead>
                     <TableHead>Bank & Rekening</TableHead>
                     <TableHead>Material</TableHead>
-                    <TableHead>Operator Timbangan</TableHead>
                     <TableHead>Kendaraan</TableHead>
-                    <TableHead className="text-right">Bruto (kg)</TableHead>
-                    <TableHead className="text-right">Tarra (kg)</TableHead>
-                    <TableHead className="text-right">Netto 1 (kg)</TableHead>
-                    <TableHead className="text-right">Potongan</TableHead>
                     <TableHead className="text-right">Netto 2 (kg)</TableHead>
                     <TableHead className="text-right">Harga/kg</TableHead>
                     <TableHead className="text-right">Total Bayar</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredData.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={15} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
                         {data.length === 0
                           ? "Belum ada data penerimaan TBS"
                           : "Tidak ada data yang sesuai dengan filter"}
@@ -408,6 +425,20 @@ export function PembayaranSupplierTable() {
                             </div>
                           </div>
                         </TableCell>
+                        <TableCell className="text-sm">
+                          {item.lokasiKebun || "-"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {item.jenisBuah ? (
+                            <Badge variant="outline">
+                              {item.jenisBuah === "TBS-BB" && "Buah Besar"}
+                              {item.jenisBuah === "TBS-BS" && "Buah Biasa"}
+                              {item.jenisBuah === "TBS-BK" && "Buah Kecil"}
+                            </Badge>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
                         <TableCell>
                           <div className="text-sm">
                             <div>{item.supplier.bankName || "-"}</div>
@@ -417,30 +448,12 @@ export function PembayaranSupplierTable() {
                           </div>
                         </TableCell>
                         <TableCell className="text-sm">{item.material.name}</TableCell>
-                        <TableCell className="text-sm font-medium">{item.operatorPenimbang}</TableCell>
                         <TableCell>
                           <div className="text-sm">
                             <div className="font-medium">{item.transporter.nomorKendaraan}</div>
                             <div className="text-xs text-muted-foreground">
                               {item.transporter.namaSupir}
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm">
-                          {item.beratBruto.toLocaleString("id-ID")}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm">
-                          {item.beratTarra.toLocaleString("id-ID")}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm text-blue-600">
-                          {item.beratNetto1.toLocaleString("id-ID", { minimumFractionDigits: 2 })}
-                        </TableCell>
-                        <TableCell className="text-right text-sm">
-                          <div className="text-orange-600">
-                            {item.potonganPersen}%
-                          </div>
-                          <div className="text-xs text-muted-foreground font-mono">
-                            ({item.potonganKg.toLocaleString("id-ID", { minimumFractionDigits: 2 })} kg)
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-bold text-primary">
@@ -470,6 +483,21 @@ export function PembayaranSupplierTable() {
                           >
                             {item.status}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedItem(item);
+                                setShowDetail(true);
+                              }}
+                              title="Lihat Detail"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))

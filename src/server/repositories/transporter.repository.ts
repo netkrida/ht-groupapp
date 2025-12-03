@@ -17,13 +17,6 @@ export class TransporterRepository {
   async getTransportersByCompany(companyId: string) {
     return db.transporter.findMany({
       where: { companyId },
-      include: {
-        supplierTransporters: {
-          include: {
-            supplier: true,
-          },
-        },
-      },
       orderBy: { nomorKendaraan: "asc" },
     });
   }
@@ -32,11 +25,6 @@ export class TransporterRepository {
     return db.transporter.findUnique({
       where: { id },
       include: {
-        supplierTransporters: {
-          include: {
-            supplier: true,
-          },
-        },
         penerimaanTBS: {
           include: {
             supplier: true,

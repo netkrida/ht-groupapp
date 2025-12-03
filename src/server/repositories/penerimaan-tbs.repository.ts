@@ -43,6 +43,7 @@ export class PenerimaanTBSRepository {
         companyId,
         nomorPenerimaan,
         ...data,
+        transporterId: data.transporterId!, // pastikan string
         beratNetto1,
         potonganKg,
         beratNetto2,

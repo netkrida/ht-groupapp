@@ -59,6 +59,7 @@ const companyMenus: Record<string, MenuItem[]> = {
         { title: "Buyer", url: "/dashboard/pt-pks/master/buyer" },
         { title: "Driver", url: "/dashboard/pt-pks/master/transportir" },
         { title: "Material", url: "/dashboard/pt-pks/master/material" },
+        { title: "Vendor", url: "/dashboard/pt-pks/master/vendor" },
       ],
     },
     

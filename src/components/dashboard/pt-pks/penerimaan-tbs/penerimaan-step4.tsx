@@ -256,6 +256,30 @@ export function PenerimaanStep4({ data, onUpdate, onSubmit, onBack, loading }: S
               )}
             </div>
 
+            {(data.lokasiKebun || data.jenisBuah) && (
+              <>
+                <Separator />
+                <div className="grid grid-cols-2 gap-4">
+                  {data.lokasiKebun && (
+                    <div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide">Lokasi Kebun</div>
+                      <div className="font-medium">{data.lokasiKebun}</div>
+                    </div>
+                  )}
+                  {data.jenisBuah && (
+                    <div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide">Jenis Buah</div>
+                      <div className="font-medium">
+                        {data.jenisBuah === "TBS-BB" && "Buah Besar (TBS-BB)"}
+                        {data.jenisBuah === "TBS-BS" && "Buah Biasa (TBS-BS)"}
+                        {data.jenisBuah === "TBS-BK" && "Buah Kecil (TBS-BK)"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
             <Separator />
 
             <div>

@@ -18,8 +18,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { TrendingUp, Package, Calendar, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, Package, Calendar, Users, Eye, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { SupplierDetailView } from "./supplier-detail-view";
 
 type Material = {
   id: string;
@@ -50,10 +52,13 @@ type SupplierData = {
 export function StockTBSDashboard() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [selectedMaterial, setSelectedMaterial] = useState<string>("");
+  const [selectedMaterialName, setSelectedMaterialName] = useState<string>("");
   const [statistics, setStatistics] = useState<TBSStatistics | null>(null);
   const [supplierData, setSupplierData] = useState<SupplierData[]>([]);
   const [suppliers, setSuppliers] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [showDetail, setShowDetail] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierData | null>(null);
 
   useEffect(() => {
     fetchMaterials();
@@ -114,16 +119,15 @@ export function StockTBSDashboard() {
         setStatistics(data);
 
         // Process supplier data
-        const processedSuppliers = data.tbsBySupplier.map((item: any) => {
-          const supplier = suppliers.get(item.supplierId);
-          return {
-            id: item.supplierId,
-            ownerName: supplier?.ownerName || "Unknown",
-            type: supplier?.type || "-",
-            totalBerat: item._sum.beratNetto2 || 0,
-            jumlahPenerimaan: item._count.id,
-          };
-        }).sort((a: SupplierData, b: SupplierData) => b.totalBerat - a.totalBerat);
+            const processedSuppliers = data.tbsBySupplier.map((item: any) => {
+              return {
+                id: item.supplierId,
+                ownerName: item.supplier?.ownerName || "Unknown",
+                type: item.supplier?.type || "-",
+                totalBerat: item._sum.beratNetto2 || 0,
+                jumlahPenerimaan: item._count.id,
+              };
+            }).sort((a: SupplierData, b: SupplierData) => b.totalBerat - a.totalBerat);
 
         setSupplierData(processedSuppliers);
       }
@@ -134,7 +138,94 @@ export function StockTBSDashboard() {
     }
   };
 
+  const exportToExcel = () => {
+    if (!statistics || supplierData.length === 0) {
+      alert("Tidak ada data untuk diekspor");
+      return;
+    }
+
+    const totalAllSuppliers = supplierData.reduce((sum, s) => sum + s.totalBerat, 0);
+    
+    // Prepare data
+    const rows = [
+      ["LAPORAN STOCK TBS"],
+      ["Material:", selectedMaterialData?.name || ""],
+      ["Tanggal Export:", new Date().toLocaleString("id-ID")],
+      [""],
+      ["RINGKASAN"],
+      ["TBS Masuk Hari Ini:", `${statistics.tbsHariIni.toFixed(2)} kg`],
+      ["TBS Masuk Bulan Ini:", `${statistics.tbsBulanIni.toFixed(2)} kg`],
+      ["Stock TBS Saat Ini:", `${statistics.stockTBS.toFixed(2)} kg`],
+      [""],
+      ["DAFTAR SUPPLIER"],
+      ["No", "Nama Supplier", "Jumlah Penerimaan", "Total Berat (kg)", "Rata-rata per Penerimaan (kg)", "% dari Total"],
+    ];
+
+    supplierData.forEach((supplier, index) => {
+      const percentage = (supplier.totalBerat / totalAllSuppliers) * 100;
+      const averagePerDelivery = supplier.totalBerat / supplier.jumlahPenerimaan;
+      
+      rows.push([
+        (index + 1).toString(),
+        supplier.ownerName,
+        supplier.jumlahPenerimaan.toString(),
+        supplier.totalBerat.toFixed(2),
+        averagePerDelivery.toFixed(2),
+        percentage.toFixed(1) + "%",
+      ]);
+    });
+
+    // Add totals
+    rows.push(
+      [""],
+      ["TOTAL", "", supplierData.reduce((sum, s) => sum + s.jumlahPenerimaan, 0).toString(), totalAllSuppliers.toFixed(2), "", "100%"]
+    );
+
+    // Convert to CSV
+    const csvContent = rows.map((row) => row.join(",")).join("\\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Laporan_Stock_TBS_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const selectedMaterialData = materials.find((m) => m.id === selectedMaterial);
+
+  // Show detail view
+  if (showDetail && selectedSupplier) {
+    return (
+      <SupplierDetailView
+        supplier={selectedSupplier}
+        materialId={selectedMaterial}
+        materialName={selectedMaterialData?.name || ""}
+        onBack={() => {
+          setShowDetail(false);
+          setSelectedSupplier(null);
+        }}
+      />
+    );
+  }
+
+  // Show detail view if supplier selected
+  if (showDetail && selectedSupplier) {
+    return (
+      <SupplierDetailView
+        supplier={selectedSupplier}
+        materialId={selectedMaterial}
+        materialName={selectedMaterialName}
+        onBack={() => {
+          setShowDetail(false);
+          setSelectedSupplier(null);
+        }}
+      />
+    );
+  }
 
   if (materials.length === 0) {
     return (
@@ -164,7 +255,14 @@ export function StockTBSDashboard() {
         <CardContent>
           <div className="space-y-2">
             <Label htmlFor="material">Pilih Material</Label>
-            <Select value={selectedMaterial} onValueChange={setSelectedMaterial}>
+            <Select 
+              value={selectedMaterial} 
+              onValueChange={(value) => {
+                setSelectedMaterial(value);
+                const material = materials.find(m => m.id === value);
+                setSelectedMaterialName(material?.name || "");
+              }}
+            >
               <SelectTrigger id="material">
                 <SelectValue placeholder="Pilih material" />
               </SelectTrigger>
@@ -285,9 +383,15 @@ export function StockTBSDashboard() {
                     Total penerimaan TBS per supplier untuk material {selectedMaterialData?.name}
                   </CardDescription>
                 </div>
-                <Badge variant="outline" className="text-base px-4 py-2">
-                  {supplierData.length} Supplier
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-base px-4 py-2">
+                    {supplierData.length} Supplier
+                  </Badge>
+                  <Button onClick={exportToExcel} variant="outline">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export Excel
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -303,13 +407,12 @@ export function StockTBSDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[60px]">Rank</TableHead>
                         <TableHead>Nama Supplier</TableHead>
-                        <TableHead>Tipe</TableHead>
                         <TableHead className="text-center">Jumlah Penerimaan</TableHead>
                         <TableHead className="text-right">Total Berat (kg)</TableHead>
                         <TableHead className="text-right">Rata-rata per Penerimaan</TableHead>
                         <TableHead className="text-right">% dari Total</TableHead>
+                        <TableHead className="text-center">Aksi</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -324,23 +427,7 @@ export function StockTBSDashboard() {
                         return (
                           <TableRow key={supplier.id}>
                             <TableCell>
-                              <div className="flex items-center justify-center">
-                                {index === 0 ? (
-                                  <Badge className="bg-yellow-500">🥇 {index + 1}</Badge>
-                                ) : index === 1 ? (
-                                  <Badge className="bg-gray-400">🥈 {index + 1}</Badge>
-                                ) : index === 2 ? (
-                                  <Badge className="bg-amber-600">🥉 {index + 1}</Badge>
-                                ) : (
-                                  <Badge variant="outline">{index + 1}</Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
                               <div className="font-medium">{supplier.ownerName}</div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">{supplier.type}</Badge>
                             </TableCell>
                             <TableCell className="text-center">
                               <Badge variant="outline">{supplier.jumlahPenerimaan}×</Badge>
@@ -369,6 +456,19 @@ export function StockTBSDashboard() {
                                   {percentage.toFixed(1)}%
                                 </span>
                               </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedSupplier(supplier);
+                                  setShowDetail(true);
+                                }}
+                                title="Lihat Detail"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         );
