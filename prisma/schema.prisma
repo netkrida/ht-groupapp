@@ -94,6 +94,8 @@ model Company {
     buyers Buyer[]
     contracts Contract[]
     vendors Vendor[]
+    pengirimanProduct PengirimanProduct[]
+    stockMovements StockMovement[]
 
     @@index([code])
 }
@@ -261,6 +263,7 @@ model Material {
     hasilProduksiOutput HasilProduksi[] @relation("HasilProduksiOutput")
     tangki Tangki[]
     contractItems ContractItem[]
+    stockMovements StockMovement[]
     
     @@index([companyId])
     @@index([kategoriId])
@@ -525,6 +528,7 @@ model Buyer {
     
     company         Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
     contracts       Contract[]
+    pengirimanProduct PengirimanProduct[]
     
     @@index([companyId])
     @@index([code])
@@ -572,6 +576,7 @@ model Contract {
     company             Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
     buyer               Buyer          @relation(fields: [buyerId], references: [id], onDelete: Cascade)
     contractItems       ContractItem[]
+    pengirimanProduct   PengirimanProduct[]
     
     @@index([companyId])
     @@index([buyerId])
@@ -599,6 +604,7 @@ model ContractItem {
     
     contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
     material    Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+    pengirimanProduct PengirimanProduct[]
     
     @@index([contractId])
     @@index([materialId])
@@ -647,7 +653,6 @@ model VendorVehicle {
     
     // Informasi Kendaraan
     nomorKendaraan  String       // Nomor polisi kendaraan
-    jenisKendaraan  String?      // Jenis kendaraan (Truk, Trailer, dll)
     
     // Informasi Supir
     namaSupir       String       // Nama supir
@@ -660,8 +665,101 @@ model VendorVehicle {
     updatedAt       DateTime     @updatedAt
     
     vendor          Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+    pengirimanProduct PengirimanProduct[]
     
     @@unique([nomorKendaraan, vendorId])
     @@index([vendorId])
     @@index([status])
+}
+
+// Enum untuk status pengiriman product
+enum StatusPengiriman {
+    DRAFT
+    COMPLETED
+    CANCELLED
+}
+
+// Model Pengiriman Product (Penjualan & Pengiriman)
+model PengirimanProduct {
+    id                   String            @id @default(cuid())
+    companyId            String
+    nomorPengiriman      String            @unique
+    tanggalPengiriman    DateTime
+    operatorPenimbang    String            // username dari user yang login
+    
+    // Informasi Penerima
+    buyerId              String
+    contractId           String
+    contractItemId       String            // Item spesifik dari kontrak yang dikirim
+    
+    // Informasi Vendor Transportir
+    vendorVehicleId      String
+    
+    // Timbangan (Tarra dulu, baru Gross)
+    beratTarra           Float
+    waktuTimbangTarra    DateTime
+    metodeTarra          MetodeInput       @default(MANUAL)
+    
+    beratGross           Float
+    waktuTimbangGross    DateTime
+    metodeGross          MetodeInput       @default(MANUAL)
+    
+    beratNetto           Float             // gross - tarra (auto kalkulasi)
+    
+    // Mutu Kernel
+    ffa                  Float             // Free Fatty Acid
+    air                  Float             // Kadar air
+    kotoran              Float             // Kadar kotoran
+    noSegel              String            @unique // No segel (auto-generated)
+    
+    status               StatusPengiriman  @default(DRAFT)
+    
+    createdAt            DateTime          @default(now())
+    updatedAt            DateTime          @updatedAt
+    
+    company              Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    buyer                Buyer             @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+    contract             Contract          @relation(fields: [contractId], references: [id], onDelete: Cascade)
+    contractItem         ContractItem      @relation(fields: [contractItemId], references: [id], onDelete: Cascade)
+    vendorVehicle        VendorVehicle     @relation(fields: [vendorVehicleId], references: [id], onDelete: Cascade)
+    
+    @@index([companyId])
+    @@index([buyerId])
+    @@index([contractId])
+    @@index([contractItemId])
+    @@index([vendorVehicleId])
+    @@index([tanggalPengiriman])
+    @@index([status])
+}
+
+// Enum untuk tipe pergerakan stock
+enum TipeMovement {
+    IN        // Barang masuk (dari penerimaan, produksi)
+    OUT       // Barang keluar (pengiriman/penjualan)
+    ADJUSTMENT // Penyesuaian stock
+}
+
+// Model Stock Movement (Riwayat pergerakan stock)
+model StockMovement {
+    id                String        @id @default(cuid())
+    companyId         String
+    materialId        String
+    tipeMovement      TipeMovement
+    jumlah            Float         // Jumlah yang masuk/keluar
+    stockSebelum      Float         // Stock sebelum transaksi
+    stockSesudah      Float         // Stock setelah transaksi
+    referensi         String?       // Nomor referensi (nomor penerimaan, pengiriman, dll)
+    keterangan        String?       // Keterangan tambahan
+    operator          String        // Username operator
+    tanggalTransaksi  DateTime      @default(now())
+    
+    createdAt         DateTime      @default(now())
+    
+    company           Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    material          Material      @relation(fields: [materialId], references: [id], onDelete: Cascade)
+    
+    @@index([companyId])
+    @@index([materialId])
+    @@index([tanggalTransaksi])
+    @@index([tipeMovement])
 }

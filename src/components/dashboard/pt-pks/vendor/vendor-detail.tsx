@@ -42,7 +42,6 @@ type Vendor = {
   vehicles?: Array<{
     id: string;
     nomorKendaraan: string;
-    jenisKendaraan: string | null;
     namaSupir: string;
     noHpSupir: string | null;
     status: string;

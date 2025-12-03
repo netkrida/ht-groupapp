@@ -1,4 +1,5 @@
 import { db } from "@/server/db";
+import { materialRepository } from "@/server/repositories/material.repository";
 import type {
   CreateProsesProduksi,
   UpdateProsesProduksi,
@@ -76,20 +77,28 @@ export class ProsesProduksiRepository {
       // Jika status COMPLETED, update stock
       if (data.status === "COMPLETED") {
         // Kurangi stock TBS (input)
-        await this.updateStockMaterial(
-          tx,
+        await materialRepository.updateStockMaterial(
           companyId,
           data.materialInputId,
-          -data.jumlahInput
+          -data.jumlahInput,
+          {
+            referensi: nomorProduksi,
+            keterangan: `Penggunaan TBS untuk produksi ${nomorProduksi}`,
+            operator: data.operatorProduksi,
+          }
         );
 
         // Tambah stock hasil produksi (output)
         for (const hasil of data.hasilProduksi) {
-          await this.updateStockMaterial(
-            tx,
+          await materialRepository.updateStockMaterial(
             companyId,
             hasil.materialOutputId,
-            hasil.jumlahOutput
+            hasil.jumlahOutput,
+            {
+              referensi: nomorProduksi,
+              keterangan: `Hasil produksi dari ${nomorProduksi}`,
+              operator: data.operatorProduksi,
+            }
           );
         }
       }
@@ -99,49 +108,6 @@ export class ProsesProduksiRepository {
         hasilProduksi,
       };
     });
-  }
-
-  /**
-   * Update stock material
-   */
-  private async updateStockMaterial(
-    tx: Prisma.TransactionClient,
-    companyId: string,
-    materialId: string,
-    amount: number
-  ) {
-    const existingStock = await tx.stockMaterial.findUnique({
-      where: {
-        companyId_materialId: {
-          companyId,
-          materialId,
-        },
-      },
-    });
-
-    if (existingStock) {
-      await tx.stockMaterial.update({
-        where: {
-          companyId_materialId: {
-            companyId,
-            materialId,
-          },
-        },
-        data: {
-          jumlah: {
-            increment: amount,
-          },
-        },
-      });
-    } else if (amount > 0) {
-      await tx.stockMaterial.create({
-        data: {
-          companyId,
-          materialId,
-          jumlah: amount,
-        },
-      });
-    }
   }
 
   /**
@@ -328,20 +294,28 @@ export class ProsesProduksiRepository {
       // Jika mengubah dari non-COMPLETED ke COMPLETED, update stock
       if (existing.status !== "COMPLETED" && status === "COMPLETED") {
         // Kurangi stock TBS (input)
-        await this.updateStockMaterial(
-          tx,
+        await materialRepository.updateStockMaterial(
           companyId,
           existing.materialInputId,
-          -existing.jumlahInput
+          -existing.jumlahInput,
+          {
+            referensi: existing.nomorProduksi,
+            keterangan: `Penggunaan TBS untuk produksi ${existing.nomorProduksi}`,
+            operator: existing.operatorProduksi,
+          }
         );
 
         // Tambah stock hasil produksi (output)
         for (const hasil of existing.hasilProduksi) {
-          await this.updateStockMaterial(
-            tx,
+          await materialRepository.updateStockMaterial(
             companyId,
             hasil.materialOutputId,
-            hasil.jumlahOutput
+            hasil.jumlahOutput,
+            {
+              referensi: existing.nomorProduksi,
+              keterangan: `Hasil produksi dari ${existing.nomorProduksi}`,
+              operator: existing.operatorProduksi,
+            }
           );
         }
       }
@@ -349,20 +323,28 @@ export class ProsesProduksiRepository {
       // Jika mengubah dari COMPLETED ke status lain, batalkan update stock
       if (existing.status === "COMPLETED" && status !== "COMPLETED") {
         // Kembalikan stock TBS (input)
-        await this.updateStockMaterial(
-          tx,
+        await materialRepository.updateStockMaterial(
           companyId,
           existing.materialInputId,
-          existing.jumlahInput
+          existing.jumlahInput,
+          {
+            referensi: existing.nomorProduksi,
+            keterangan: `Pembatalan produksi ${existing.nomorProduksi}`,
+            operator: existing.operatorProduksi,
+          }
         );
 
         // Kurangi stock hasil produksi (output)
         for (const hasil of existing.hasilProduksi) {
-          await this.updateStockMaterial(
-            tx,
+          await materialRepository.updateStockMaterial(
             companyId,
             hasil.materialOutputId,
-            -hasil.jumlahOutput
+            -hasil.jumlahOutput,
+            {
+              referensi: existing.nomorProduksi,
+              keterangan: `Pembatalan produksi ${existing.nomorProduksi}`,
+              operator: existing.operatorProduksi,
+            }
           );
         }
       }

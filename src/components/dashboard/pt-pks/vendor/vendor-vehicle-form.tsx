@@ -50,7 +50,6 @@ export function VendorVehicleForm({
     resolver: zodResolver(createVendorVehicleSchema),
     defaultValues: initialData || {
       nomorKendaraan: "",
-      jenisKendaraan: "",
       namaSupir: "",
       noHpSupir: "",
       status: "ACTIVE",

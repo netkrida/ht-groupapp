@@ -99,7 +99,6 @@ export class VendorVehicleRepository {
       select: {
         id: true,
         nomorKendaraan: true,
-        jenisKendaraan: true,
         namaSupir: true,
         noHpSupir: true,
       },

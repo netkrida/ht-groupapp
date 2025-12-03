@@ -114,8 +114,17 @@ export class MaterialService {
     return materialRepository.getStockMaterialsByCompany(companyId);
   }
 
-  async updateStockMaterial(companyId: string, materialId: string, jumlah: number) {
-    return materialRepository.updateStockMaterial(companyId, materialId, jumlah);
+  async updateStockMaterial(
+    companyId: string, 
+    materialId: string, 
+    jumlah: number,
+    options?: {
+      referensi?: string;
+      keterangan?: string;
+      operator?: string;
+    }
+  ) {
+    return materialRepository.updateStockMaterial(companyId, materialId, jumlah, options);
   }
 }
 

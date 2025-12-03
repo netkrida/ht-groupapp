@@ -26,7 +26,6 @@ import { ArrowLeft, Plus, Truck, Loader2 } from "lucide-react";
 interface VendorVehicle {
   id: string;
   nomorKendaraan: string;
-  jenisKendaraan: string | null;
   namaSupir: string;
   noHpSupir: string | null;
   status: "ACTIVE" | "INACTIVE";

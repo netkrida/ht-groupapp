@@ -54,7 +54,6 @@ export const vendorQuerySchema = z.object({
 // VendorVehicle schemas
 export const createVendorVehicleSchema = z.object({
   nomorKendaraan: z.string().min(1, "Nomor kendaraan wajib diisi"),
-  jenisKendaraan: z.string().optional().nullable(),
   namaSupir: z.string().min(1, "Nama supir wajib diisi"),
   noHpSupir: z.string().optional().nullable(),
   status: statusVendorSchema,
@@ -62,7 +61,6 @@ export const createVendorVehicleSchema = z.object({
 
 export const updateVendorVehicleSchema = z.object({
   nomorKendaraan: z.string().min(1, "Nomor kendaraan wajib diisi").optional(),
-  jenisKendaraan: z.string().optional().nullable(),
   namaSupir: z.string().min(1, "Nama supir wajib diisi").optional(),
   noHpSupir: z.string().optional().nullable(),
   status: statusVendorSchema.optional(),

@@ -51,7 +51,12 @@ export class PenerimaanTBSService {
       await materialRepository.updateStockMaterial(
         companyId,
         data.materialId,
-        penerimaan.beratNetto2
+        penerimaan.beratNetto2,
+        {
+          referensi: penerimaan.nomorPenerimaan,
+          keterangan: `Penerimaan TBS dari supplier`,
+          operator: data.operatorPenimbang || "system",
+        }
       );
     }
 
@@ -84,37 +89,54 @@ export class PenerimaanTBSService {
 
     const updated = await penerimaanTBSRepository.updatePenerimaanTBS(id, data);
 
-    // Update stock if status changes to COMPLETED
-    if (data.status === "COMPLETED" && current.status !== "COMPLETED") {
+    // Handle stock adjustment based on status changes and weight changes
+    const wasCompleted = current.status === "COMPLETED";
+    const isCompleted = updated.status === "COMPLETED";
+    const oldWeight = current.beratNetto2;
+    const newWeight = updated.beratNetto2;
+
+    if (wasCompleted && isCompleted) {
+      // Status tetap COMPLETED, cek perubahan berat
+      if (newWeight !== oldWeight) {
+        const difference = newWeight - oldWeight;
+        await materialRepository.updateStockMaterial(
+          current.companyId,
+          current.materialId,
+          difference,
+          {
+            referensi: updated.nomorPenerimaan,
+            keterangan: `Update penerimaan TBS (perubahan berat: ${oldWeight} kg → ${newWeight} kg)`,
+            operator: updated.operatorPenimbang || "system",
+          }
+        );
+      }
+    } else if (!wasCompleted && isCompleted) {
+      // Status berubah dari DRAFT/CANCELLED ke COMPLETED
+      // Tambah stock dengan berat baru
       await materialRepository.updateStockMaterial(
         current.companyId,
         current.materialId,
-        updated.beratNetto2
+        newWeight,
+        {
+          referensi: updated.nomorPenerimaan,
+          keterangan: `Penerimaan TBS disetujui (status: ${current.status} → COMPLETED)`,
+          operator: updated.operatorPenimbang || "system",
+        }
       );
-    }
-
-    // Adjust stock if status changes from COMPLETED to other
-    if (data.status !== "COMPLETED" && current.status === "COMPLETED") {
+    } else if (wasCompleted && !isCompleted) {
+      // Status berubah dari COMPLETED ke DRAFT/CANCELLED
+      // Kurangi stock dengan berat lama
       await materialRepository.updateStockMaterial(
         current.companyId,
         current.materialId,
-        -current.beratNetto2
+        -oldWeight,
+        {
+          referensi: updated.nomorPenerimaan,
+          keterangan: `Penerimaan TBS dibatalkan (status: COMPLETED → ${updated.status})`,
+          operator: updated.operatorPenimbang || "system",
+        }
       );
     }
-
-    // Adjust stock if weight changes and status is COMPLETED
-    if (
-      current.status === "COMPLETED" &&
-      updated.beratNetto2 !== current.beratNetto2
-    ) {
-      const difference = updated.beratNetto2 - current.beratNetto2;
-      await materialRepository.updateStockMaterial(
-        current.companyId,
-        current.materialId,
-        difference
-      );
-    }
-
     return updated;
   }
 
@@ -129,7 +151,12 @@ export class PenerimaanTBSService {
       await materialRepository.updateStockMaterial(
         penerimaan.companyId,
         penerimaan.materialId,
-        -penerimaan.beratNetto2
+        -penerimaan.beratNetto2,
+        {
+          referensi: penerimaan.nomorPenerimaan,
+          keterangan: `Hapus penerimaan TBS`,
+          operator: penerimaan.operatorPenimbang || "system",
+        }
       );
     }
 

@@ -196,8 +196,31 @@ export class MaterialRepository {
     });
   }
 
-  async updateStockMaterial(companyId: string, materialId: string, jumlah: number) {
-    return db.stockMaterial.upsert({
+  async updateStockMaterial(
+    companyId: string, 
+    materialId: string, 
+    jumlah: number,
+    options?: {
+      referensi?: string;
+      keterangan?: string;
+      operator?: string;
+    }
+  ) {
+    // Get current stock
+    const currentStock = await db.stockMaterial.findUnique({
+      where: {
+        companyId_materialId: {
+          companyId,
+          materialId,
+        },
+      },
+    });
+
+    const stockSebelum = currentStock?.jumlah || 0;
+    const stockSesudah = stockSebelum + jumlah;
+
+    // Update stock
+    const updated = await db.stockMaterial.upsert({
       where: {
         companyId_materialId: {
           companyId,
@@ -215,6 +238,25 @@ export class MaterialRepository {
         },
       },
     });
+
+    // Record stock movement
+    const tipeMovement = jumlah > 0 ? "IN" : jumlah < 0 ? "OUT" : "ADJUSTMENT";
+    await db.stockMovement.create({
+      data: {
+        companyId,
+        materialId,
+        tipeMovement,
+        jumlah: Math.abs(jumlah),
+        stockSebelum,
+        stockSesudah,
+        referensi: options?.referensi || null,
+        keterangan: options?.keterangan || null,
+        operator: options?.operator || "system",
+        tanggalTransaksi: new Date(),
+      },
+    });
+
+    return updated;
   }
 }
 

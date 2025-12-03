@@ -15,7 +15,6 @@ import { Pencil, Trash2 } from "lucide-react";
 type VendorVehicle = {
   id: string;
   nomorKendaraan: string;
-  jenisKendaraan: string | null;
   namaSupir: string;
   noHpSupir: string | null;
   status: "ACTIVE" | "INACTIVE";
@@ -67,7 +66,6 @@ export function VendorVehicleTable({
                 <TableCell className="font-medium">
                   {vehicle.nomorKendaraan}
                 </TableCell>
-                <TableCell>{vehicle.jenisKendaraan || "-"}</TableCell>
                 <TableCell>{vehicle.namaSupir}</TableCell>
                 <TableCell>{vehicle.noHpSupir || "-"}</TableCell>
                 <TableCell>

@@ -97,6 +97,14 @@ const companyMenus: Record<string, MenuItem[]> = {
         { title: "Stock TBS", url: "/dashboard/pt-pks/gudang/stock-tbs" },
         { title: "Stock Product", url: "/dashboard/pt-pks/gudang/stock-product" },
         { title: "Stock Movement", url: "/dashboard/pt-pks/gudang/stock-movement" },
+        { title: "Inventaris", url: "/dashboard/pt-pks/gudang/inventaris" },
+        { title: "Store Request (SR)", url: "/dashboard/pt-pks/gudang/store-request" },
+        { title: "Purchase Request (PR)", url: "/dashboard/pt-pks/gudang/purchase-request" },
+        { title: "Purchase Order (PO)", url: "/dashboard/pt-pks/gudang/purchase-order" },
+        { title: "Penerimaan Barang", url: "/dashboard/pt-pks/gudang/penerimaan-barang" },
+        { title: "Pengeluaran Barang", url: "/dashboard/pt-pks/gudang/pengeluaran-barang" },
+      
+
       ],
     },
     
@@ -107,28 +115,10 @@ const companyMenus: Record<string, MenuItem[]> = {
       icon: ShoppingCart,
       roles: ["Admin", "Manager Marketing", "Staff Marketing"],
       items: [
-        { title: "Penjualan Product", url: "/dashboard/pt-pks/pemasaran/penjualan-product" }, // 🔄 Gabung Cangkang + Fiber
-        { title: "Piutang Customer", url: "/dashboard/pt-pks/pemasaran/piutang-customer" },
-        { title: "Pembayaran Customer", url: "/dashboard/pt-pks/pemasaran/pembayaran-customer" }, // 🆕
+        { title: "Pengiriman Product", url: "/dashboard/pt-pks/pemasaran/pengiriman-product" },
       ],
     },
     
-    // ============ LAPORAN (REPORTING) ============ 🆕 BARU!
-    {
-      title: "Laporan",
-      url: "/dashboard/pt-pks/laporan",
-      icon: FileText,
-      roles: ["Admin", "Manager", "Direktur"],
-      items: [
-        { title: "Laporan Penerimaan TBS", url: "/dashboard/pt-pks/laporan/penerimaan-tbs" },
-        { title: "Laporan Produksi", url: "/dashboard/pt-pks/laporan/produksi" },
-        { title: "Laporan Penjualan", url: "/dashboard/pt-pks/laporan/penjualan" },
-        { title: "Laporan Keuangan", url: "/dashboard/pt-pks/laporan/keuangan" },
-        { title: "Laporan Rendemen", url: "/dashboard/pt-pks/laporan/rendemen" },
-      ],
-    },
-    
-    // ============ KEUANGAN ============ 🆕 BARU (Opsional)
     {
       title: "Keuangan",
       url: "/dashboard/pt-pks/keuangan",
@@ -139,6 +129,18 @@ const companyMenus: Record<string, MenuItem[]> = {
         { title: "Piutang Customer", url: "/dashboard/pt-pks/keuangan/piutang-customer" },
         { title: "Kas & Bank", url: "/dashboard/pt-pks/keuangan/kas-bank" },
         { title: "Jurnal", url: "/dashboard/pt-pks/keuangan/jurnal" },
+      ],
+    },
+
+    {
+      title: "Laporan",
+      url: "/dashboard/pt-pks/laporan",
+      icon: FileText,
+      roles: ["Admin", "Manager", "Direktur"],
+      items: [
+        { title: "Laporan Penerimaan TBS", url: "/dashboard/pt-pks/laporan/penerimaan-tbs" },
+        { title: "Laporan Produksi", url: "/dashboard/pt-pks/laporan/produksi" },
+        { title: "Laporan Penjualan", url: "/dashboard/pt-pks/laporan/penjualan" },
       ],
     },
     
