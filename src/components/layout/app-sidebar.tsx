@@ -127,7 +127,6 @@ const companyMenus: Record<string, MenuItem[]> = {
       items: [
         { title: "Hutang Supplier", url: "/dashboard/pt-pks/keuangan/hutang-supplier" },
         { title: "Piutang Customer", url: "/dashboard/pt-pks/keuangan/piutang-customer" },
-        { title: "Kas & Bank", url: "/dashboard/pt-pks/keuangan/kas-bank" },
         { title: "Jurnal", url: "/dashboard/pt-pks/keuangan/jurnal" },
       ],
     },
