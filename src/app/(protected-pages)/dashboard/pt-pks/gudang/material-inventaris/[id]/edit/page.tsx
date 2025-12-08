@@ -1,4 +1,4 @@
-import { MaterialInventarisEdit } from "@/components/dashboard/pt-pks/gudang/material-inventaris/material-inventaris-edit";
+import { MaterialInventarisEdit } from "@/components/dashboard/pt-pks/material-inventaris/material-inventaris-edit";
 
 export default function EditMaterialPage({
   params,

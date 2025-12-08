@@ -1,4 +1,4 @@
-import { StoreRequestList } from "@/components/dashboard/pt-pks/gudang/store-request/store-request-list";
+import { StoreRequestList } from "@/components/dashboard/pt-pks/store-request/store-request-list";
 
 export default function StoreRequestPage() {
   return (

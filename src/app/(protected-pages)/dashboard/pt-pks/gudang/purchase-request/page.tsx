@@ -1,6 +1,15 @@
-import { PurchaseRequestList } from "@/components/dashboard/pt-pks/gudang/purchase-request/purchase-request-list";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { PurchaseRequestList } from "@/components/dashboard/pt-pks/purchase-request/purchase-request-list";
 
 export default function PurchaseRequestPage() {
+  const router = useRouter();
+
+  const handleViewDetail = (id: string) => {
+    router.push(`/dashboard/pt-pks/gudang/purchase-request/${id}`);
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="mb-6">
@@ -9,7 +18,7 @@ export default function PurchaseRequestPage() {
           Permintaan pembelian dari gudang ke Head Office untuk persetujuan
         </p>
       </div>
-      <PurchaseRequestList />
+      <PurchaseRequestList onViewDetail={handleViewDetail} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { MaterialInventarisList } from "@/components/dashboard/pt-pks/gudang/material-inventaris/material-inventaris-list";
+import { MaterialInventarisList } from "@/components/dashboard/pt-pks/material-inventaris/material-inventaris-list";
 
 export default function InventarisPage() {
   return (

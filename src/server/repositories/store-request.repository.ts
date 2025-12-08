@@ -73,6 +73,7 @@ export const storeRequestRepository = {
         divisi: data.divisi,
         requestedBy: data.requestedBy,
         keterangan: data.keterangan,
+        status: StatusStoreRequest.PENDING,
         items: {
           create: data.items.map(item => ({
             materialId: item.materialId,

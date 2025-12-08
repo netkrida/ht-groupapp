@@ -1,9 +1,10 @@
 import { penerimaanBarangRepository } from "../../repositories/penerimaan-barang.repository";
 import { purchaseOrderRepository } from "../../repositories/purchase-order.repository";
+import { purchaseRequestRepository } from "../../repositories/purchase-request.repository";
 import { materialInventarisRepository } from "../../repositories/material-inventaris.repository";
 import { inventoryTransactionRepository } from "../../repositories/inventory-transaction.repository";
 import type { PenerimaanBarangInput, UpdatePenerimaanBarangInput } from "../../schema/penerimaan-barang";
-import { StatusPenerimaanBarang, StatusPurchaseOrder, TipeMovement } from "@prisma/client";
+import { StatusPenerimaanBarang, StatusPurchaseOrder, StatusPurchaseRequest, TipeMovement } from "@prisma/client";
 import { db } from "../../db";
 
 export const penerimaanBarangService = {
@@ -41,6 +42,20 @@ export const penerimaanBarangService = {
       }
       if (po.status !== StatusPurchaseOrder.ISSUED && po.status !== StatusPurchaseOrder.PARTIAL_RECEIVED) {
         throw new Error("Purchase Order harus sudah diterbitkan");
+      }
+    }
+
+    // If linked to PR (direct purchase), validate PR
+    if (data.purchaseRequestId) {
+      const pr = await purchaseRequestRepository.findById(data.purchaseRequestId, companyId);
+      if (!pr) {
+        throw new Error("Purchase Request tidak ditemukan");
+      }
+      if (pr.tipePembelian !== "PEMBELIAN_LANGSUNG") {
+        throw new Error("Purchase Request harus bertipe PEMBELIAN_LANGSUNG");
+      }
+      if (pr.status !== StatusPurchaseRequest.APPROVED) {
+        throw new Error("Purchase Request harus sudah approved");
       }
     }
 
@@ -188,6 +203,14 @@ export const penerimaanBarangService = {
         }
       }
 
+      // Update PR status if linked (for direct purchase)
+      if (gr.purchaseRequestId) {
+        await tx.purchaseRequest.update({
+          where: { id: gr.purchaseRequestId },
+          data: { status: StatusPurchaseRequest.COMPLETED },
+        });
+      }
+
       return updatedGR;
     });
   },
@@ -199,5 +222,140 @@ export const penerimaanBarangService = {
     }
 
     return penerimaanBarangRepository.delete(id, companyId);
+  },
+
+  async createFromPR(
+    companyId: string,
+    purchaseRequestId: string,
+    additionalData: {
+      receivedBy: string;
+      nomorSuratJalan?: string;
+      tanggalSuratJalan?: string;
+      tanggalPenerimaan?: string;
+      keterangan?: string;
+    }
+  ) {
+    // Get PR with items
+    const pr = await purchaseRequestRepository.findById(purchaseRequestId, companyId);
+    if (!pr) {
+      throw new Error("Purchase Request tidak ditemukan");
+    }
+
+    if (pr.tipePembelian !== "PEMBELIAN_LANGSUNG") {
+      throw new Error("Hanya Purchase Request dengan tipe PEMBELIAN_LANGSUNG yang dapat diproses");
+    }
+
+    if (pr.status !== StatusPurchaseRequest.APPROVED) {
+      throw new Error("Purchase Request harus sudah approved");
+    }
+
+    // Validate items exist
+    if (!pr.items || pr.items.length === 0) {
+      throw new Error("Purchase Request tidak memiliki items");
+    }
+
+    console.log("PR Items:", JSON.stringify(pr.items, null, 2));
+
+    // Validate all items have jumlahRequest
+    for (const item of pr.items) {
+      console.log(`Item ${item.materialId}: jumlahRequest = ${item.jumlahRequest}`);
+      if (typeof item.jumlahRequest !== 'number' || item.jumlahRequest <= 0) {
+        throw new Error(`Item material ${item.materialId} tidak memiliki jumlah request yang valid (jumlahRequest: ${item.jumlahRequest})`);
+      }
+    }
+
+    // Generate nomor penerimaan
+    const nomorPenerimaan = await penerimaanBarangRepository.generateNomorPenerimaan(companyId);
+
+    // Create penerimaan barang using transaction
+    return db.$transaction(async (tx) => {
+      // Create penerimaan barang
+      const penerimaanBarang = await tx.penerimaanBarang.create({
+        data: {
+          companyId,
+          nomorPenerimaan,
+          purchaseRequestId,
+          vendorId: "vendor-pr",
+          vendorName: pr.vendorNameDirect || "Vendor Direct",
+          tanggalPenerimaan: additionalData.tanggalPenerimaan 
+            ? new Date(additionalData.tanggalPenerimaan) 
+            : new Date(),
+          receivedBy: additionalData.receivedBy,
+          nomorSuratJalan: additionalData.nomorSuratJalan,
+          tanggalSuratJalan: additionalData.tanggalSuratJalan 
+            ? new Date(additionalData.tanggalSuratJalan) 
+            : undefined,
+          keterangan: additionalData.keterangan,
+          status: StatusPenerimaanBarang.COMPLETED,
+          items: {
+            create: pr.items.map((item) => ({
+              materialId: item.materialId,
+              jumlahDiterima: item.jumlahRequest,
+              hargaSatuan: item.estimasiHarga || 0,
+              totalHarga: (item.estimasiHarga || 0) * item.jumlahRequest,
+              lokasiPenyimpanan: "Gudang Utama",
+            })),
+          },
+        },
+        include: {
+          items: {
+            include: {
+              material: {
+                include: {
+                  kategoriMaterial: true,
+                  satuanMaterial: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Update stock and create transactions for each item
+      for (const item of pr.items) {
+        const material = await tx.materialInventaris.findUnique({
+          where: { id: item.materialId },
+        });
+
+        if (!material) {
+          throw new Error(`Material ${item.materialId} tidak ditemukan`);
+        }
+
+        const newStock = material.stockOnHand + item.jumlahRequest;
+
+        // Update material stock
+        await tx.materialInventaris.update({
+          where: { id: item.materialId },
+          data: { stockOnHand: newStock },
+        });
+
+        // Create inventory transaction
+        await tx.inventoryTransaction.create({
+          data: {
+            companyId,
+            materialId: item.materialId,
+            tipeTransaksi: TipeMovement.IN,
+            referensi: nomorPenerimaan,
+            vendorId: "vendor-pr",
+            vendorName: pr.vendorNameDirect || "Vendor Direct",
+            jumlahMasuk: item.jumlahRequest,
+            jumlahKeluar: 0,
+            stockOnHand: newStock,
+            hargaSatuan: item.estimasiHarga || 0,
+            totalHarga: (item.estimasiHarga || 0) * item.jumlahRequest,
+            keterangan: `Penerimaan Barang dari PR ${pr.nomorPR} - ${pr.vendorNameDirect}`,
+            operator: additionalData.receivedBy,
+          },
+        });
+      }
+
+      // Update PR status to COMPLETED
+      await tx.purchaseRequest.update({
+        where: { id: purchaseRequestId },
+        data: { status: StatusPurchaseRequest.COMPLETED },
+      });
+
+      return penerimaanBarang;
+    });
   },
 };

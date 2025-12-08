@@ -76,7 +76,7 @@ export function StockMovementList() {
   const [loading, setLoading] = useState(true);
   
   // Filters
-  const [selectedMaterial, setSelectedMaterial] = useState<string>("");
+  const [selectedMaterial, setSelectedMaterial] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -106,7 +106,7 @@ export function StockMovementList() {
     try {
       // Build query params
       const params = new URLSearchParams();
-      if (selectedMaterial) params.append("materialId", selectedMaterial);
+      if (selectedMaterial && selectedMaterial !== "all") params.append("materialId", selectedMaterial);
       if (selectedType) params.append("tipeMovement", selectedType);
       if (startDate) params.append("startDate", startDate);
       if (endDate) params.append("endDate", endDate);
@@ -139,7 +139,7 @@ export function StockMovementList() {
   };
 
   const handleReset = () => {
-    setSelectedMaterial("");
+    setSelectedMaterial("all");
     setSelectedType("");
     setStartDate("");
     setEndDate("");
@@ -210,7 +210,7 @@ export function StockMovementList() {
                     <SelectValue placeholder="Semua Material" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Semua Material</SelectItem>
+                    <SelectItem value="all">Semua Material</SelectItem>
                     {materials.map((material) => (
                       <SelectItem key={material.id} value={material.id}>
                         {material.code} - {material.name}
@@ -227,7 +227,7 @@ export function StockMovementList() {
                     <SelectValue placeholder="Semua Tipe" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Semua Tipe</SelectItem>
+                    <SelectItem value="ALL">Semua Tipe</SelectItem>
                     <SelectItem value="IN">Masuk (IN)</SelectItem>
                     <SelectItem value="OUT">Keluar (OUT)</SelectItem>
                     <SelectItem value="ADJUSTMENT">Adjustment</SelectItem>

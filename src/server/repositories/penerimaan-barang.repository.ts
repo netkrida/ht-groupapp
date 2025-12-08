@@ -31,6 +31,7 @@ export const penerimaanBarangRepository = {
       where,
       include: {
         purchaseOrder: true,
+        purchaseRequest: true,
         items: {
           include: {
             material: {
@@ -60,6 +61,15 @@ export const penerimaanBarangRepository = {
             },
           },
         },
+        purchaseRequest: {
+          include: {
+            items: {
+              include: {
+                material: true,
+              },
+            },
+          },
+        },
         items: {
           include: {
             material: {
@@ -81,6 +91,7 @@ export const penerimaanBarangRepository = {
         companyId,
         nomorPenerimaan,
         purchaseOrderId: data.purchaseOrderId,
+        purchaseRequestId: data.purchaseRequestId,
         vendorId: data.vendorId,
         vendorName: data.vendorName,
         nomorSuratJalan: data.nomorSuratJalan,

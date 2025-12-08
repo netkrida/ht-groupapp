@@ -2,11 +2,12 @@ import { purchaseRequestRepository } from "../../repositories/purchase-request.r
 import { storeRequestRepository } from "../../repositories/store-request.repository";
 import { materialInventarisRepository } from "../../repositories/material-inventaris.repository";
 import type { PurchaseRequestInput, UpdatePurchaseRequestInput } from "../../schema/purchase-request";
-import { StatusPurchaseRequest, StatusStoreRequest } from "@prisma/client";
+import { StatusPurchaseRequest, StatusStoreRequest, TipePembelianPR } from "@prisma/client";
 
 export const purchaseRequestService = {
   async getAll(companyId: string, filters?: {
     status?: StatusPurchaseRequest;
+    tipePembelian?: TipePembelianPR;
     startDate?: Date;
     endDate?: Date;
   }) {
@@ -28,6 +29,11 @@ export const purchaseRequestService = {
       if (!material) {
         throw new Error(`Material dengan ID ${item.materialId} tidak ditemukan`);
       }
+    }
+
+    // Validate vendor info for direct purchase
+    if (data.tipePembelian === "PEMBELIAN_LANGSUNG" && !data.vendorNameDirect) {
+      throw new Error("Nama vendor wajib diisi untuk pembelian langsung");
     }
 
     // If linked to SR, validate SR status
@@ -100,5 +106,15 @@ export const purchaseRequestService = {
     }
 
     return purchaseRequestRepository.delete(id, companyId);
+  },
+
+  // Get approved PRs untuk dijadikan referensi PO
+  async getApprovedForPO(companyId: string) {
+    return purchaseRequestRepository.findApprovedForPO(companyId);
+  },
+
+  // Get approved PRs untuk pembelian langsung (siap penerimaan barang)
+  async getApprovedDirectPurchase(companyId: string) {
+    return purchaseRequestRepository.findApprovedDirectPurchase(companyId);
   },
 };

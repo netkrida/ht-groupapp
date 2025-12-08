@@ -265,6 +265,31 @@ export const purchaseOrderRepository = {
     });
   },
 
+  // Method untuk mendapatkan PR yang approved dan siap untuk dijadikan PO
+  async findPendingPRsForPO(companyId: string) {
+    return db.purchaseRequest.findMany({
+      where: {
+        companyId,
+        tipePembelian: "PENGAJUAN_PO",
+        status: "APPROVED",
+        purchaseOrder: null, // Belum ada PO
+      },
+      include: {
+        items: {
+          include: {
+            material: {
+              include: {
+                kategoriMaterial: true,
+                satuanMaterial: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { tanggalRequest: "desc" },
+    });
+  },
+
   async generateNomorPO(companyId: string) {
     const today = new Date();
     const year = today.getFullYear();

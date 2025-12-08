@@ -1,4 +1,4 @@
-import { PurchaseOrderList } from "@/components/dashboard/pt-pks/gudang/purchase-order/purchase-order-list";
+import { PurchaseOrderList } from "@/components/dashboard/pt-pks/purchase-order/purchase-order-list";
 
 export default function PurchaseOrderPage() {
   return (

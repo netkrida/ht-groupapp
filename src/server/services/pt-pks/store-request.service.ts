@@ -39,8 +39,8 @@ export const storeRequestService = {
   async update(id: string, companyId: string, data: UpdateStoreRequestInput) {
     // Check if SR exists and can be updated
     const sr = await this.getById(id, companyId);
-    if (sr.status !== StatusStoreRequest.DRAFT) {
-      throw new Error("Store Request tidak dapat diubah karena sudah diproses");
+    if (sr.status !== StatusStoreRequest.PENDING) {
+      throw new Error("Store Request hanya bisa diubah sebelum diapprove");
     }
 
     // Validate materials if items are provided

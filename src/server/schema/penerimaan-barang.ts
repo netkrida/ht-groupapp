@@ -13,6 +13,7 @@ export const penerimaanBarangItemSchema = z.object({
 // Schema untuk Penerimaan Barang
 export const penerimaanBarangSchema = z.object({
   purchaseOrderId: z.string().optional(),
+  purchaseRequestId: z.string().optional(), // Untuk PR pembelian langsung
   vendorId: z.string().min(1, "Vendor wajib dipilih"),
   vendorName: z.string().min(1, "Nama vendor wajib diisi"),
   nomorSuratJalan: z.string().optional(),

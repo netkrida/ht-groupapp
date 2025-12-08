@@ -300,7 +300,7 @@ Saat proses produksi di-`COMPLETE`:
 
 Menu location: **Gudang > Stock Product**
 
-Path: `/dashboard/pt-pks/gudang/stock-product`
+Path: `/dashboard/pt-pks/stock-product`
 
 ## Security & Permissions
 

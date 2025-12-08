@@ -116,4 +116,9 @@ export const purchaseOrderService = {
 
     return purchaseOrderRepository.delete(id, companyId);
   },
+
+  // Get pending PRs yang siap untuk dijadikan referensi PO
+  async getPendingPRsForPO(companyId: string) {
+    return purchaseOrderRepository.findPendingPRsForPO(companyId);
+  },
 };

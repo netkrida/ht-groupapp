@@ -56,7 +56,7 @@ File di `src/server/services/pt-pks/`:
 - Generate nomor otomatis untuk semua dokumen (SR, PR, PO, GR, GI)
 
 #### 5. API Routes (Controllers) 
-File di `src/app/api/pt-pks/gudang/`:
+File di `src/app/api/pt-pks/`:
 
 **Dibuat:**
 - `material-inventaris/route.ts` - GET (all, summary, low-stock), POST
@@ -161,12 +161,12 @@ Setelah issue: complete() → COMPLETED
 
 ### Routes yang Dibutuhkan:
 ```
-/dashboard/pt-pks/gudang/inventaris - Tampilan semua material dengan transaksi
-/dashboard/pt-pks/gudang/store-request - List dan form SR
-/dashboard/pt-pks/gudang/purchase-request - List dan form PR
-/dashboard/pt-pks/gudang/purchase-order - List dan form PO
-/dashboard/pt-pks/gudang/penerimaan-barang - List dan form penerimaan
-/dashboard/pt-pks/gudang/pengeluaran-barang - List dan form pengeluaran
+/dashboard/pt-pks/inventaris - Tampilan semua material dengan transaksi
+/dashboard/pt-pks/store-request - List dan form SR
+/dashboard/pt-pks/purchase-request - List dan form PR
+/dashboard/pt-pks/purchase-order - List dan form PO
+/dashboard/pt-pks/penerimaan-barang - List dan form penerimaan
+/dashboard/pt-pks/pengeluaran-barang - List dan form pengeluaran
 ```
 
 ## Langkah Implementasi Selanjutnya
@@ -190,7 +190,7 @@ Tambahkan sample data di `prisma/seed.ts` untuk testing:
 Copy pola dari API routes yang sudah dibuat untuk melengkapi endpoint lainnya.
 
 ### Step 4: Buat Komponen UI
-Komponen yang dibutuhkan di `src/components/dashboard/pt-pks/gudang/`:
+Komponen yang dibutuhkan di `src/components/dashboard/pt-pks/`:
 - `material-inventaris/` - Table, form, detail
 - `store-request/` - Table, form, detail, approval
 - `purchase-request/` - Table, form, detail, approval
@@ -200,7 +200,7 @@ Komponen yang dibutuhkan di `src/components/dashboard/pt-pks/gudang/`:
 - `inventaris-dashboard/` - Dashboard overview dengan filter
 
 ### Step 5: Buat Pages
-Buat file di `src/app/(protected-pages)/dashboard/pt-pks/gudang/`:
+Buat file di `src/app/(protected-pages)/dashboard/pt-pks/`:
 - `inventaris/page.tsx` - Import component
 - `store-request/page.tsx`
 - `purchase-request/page.tsx`
@@ -240,7 +240,7 @@ Setiap penerimaan dan pengeluaran barang otomatis tercatat di `InventoryTransact
 
 ### Membuat Store Request
 ```typescript
-POST /api/pt-pks/gudang/store-request
+POST /api/pt-pks/store-request
 {
   "divisi": "Produksi",
   "requestedBy": "John Doe",
@@ -257,7 +257,7 @@ POST /api/pt-pks/gudang/store-request
 
 ### Complete Penerimaan Barang (Update Stock)
 ```typescript
-POST /api/pt-pks/gudang/penerimaan-barang/{id}/complete
+POST /api/pt-pks/penerimaan-barang/{id}/complete
 {
   "checkedBy": "Admin Gudang"
 }
@@ -271,7 +271,7 @@ POST /api/pt-pks/gudang/penerimaan-barang/{id}/complete
 
 ### Issue Pengeluaran Barang (Update Stock)
 ```typescript
-POST /api/pt-pks/gudang/pengeluaran-barang/{id}/issue
+POST /api/pt-pks/pengeluaran-barang/{id}/issue
 {
   "issuedBy": "Admin Gudang"
 }

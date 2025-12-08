@@ -53,7 +53,7 @@ src/server/services/pt-pks/
 
 ### 5. API Routes
 ```
-src/app/api/pt-pks/gudang/
+src/app/api/pt-pks/
 ├── material-inventaris/
 │   ├── route.ts (GET all, POST create)
 │   └── [id]/route.ts (GET, PATCH, DELETE)
@@ -76,7 +76,7 @@ src/app/api/pt-pks/gudang/
 
 ### 6. Komponen UI (Sample)
 ```
-src/components/dashboard/pt-pks/gudang/
+src/components/dashboard/pt-pks/
 └── material-inventaris/
     └── material-inventaris-list.tsx (Sample component)
 ```
@@ -97,23 +97,23 @@ Edit file `src/components/layout/app-sidebar.tsx` atau nav config, tambahkan:
 {
   title: "Gudang",
   items: [
-    { title: "Inventaris", url: "/dashboard/pt-pks/gudang/inventaris" },
-    { title: "Store Request (SR)", url: "/dashboard/pt-pks/gudang/store-request" },
-    { title: "Purchase Request (PR)", url: "/dashboard/pt-pks/gudang/purchase-request" },
-    { title: "Purchase Order (PO)", url: "/dashboard/pt-pks/gudang/purchase-order" },
-    { title: "Penerimaan Barang", url: "/dashboard/pt-pks/gudang/penerimaan-barang" },
-    { title: "Pengeluaran Barang", url: "/dashboard/pt-pks/gudang/pengeluaran-barang" },
+    { title: "Inventaris", url: "/dashboard/pt-pks/inventaris" },
+    { title: "Store Request (SR)", url: "/dashboard/pt-pks/store-request" },
+    { title: "Purchase Request (PR)", url: "/dashboard/pt-pks/purchase-request" },
+    { title: "Purchase Order (PO)", url: "/dashboard/pt-pks/purchase-order" },
+    { title: "Penerimaan Barang", url: "/dashboard/pt-pks/penerimaan-barang" },
+    { title: "Pengeluaran Barang", url: "/dashboard/pt-pks/pengeluaran-barang" },
   ],
 }
 ```
 
 ### 2. Buat Pages
 
-Buat folder dan file pages di `src/app/(protected-pages)/dashboard/pt-pks/gudang/`:
+Buat folder dan file pages di `src/app/(protected-pages)/dashboard/pt-pks/`:
 
 ```typescript
 // inventaris/page.tsx
-import { MaterialInventarisList } from "@/components/dashboard/pt-pks/gudang/material-inventaris/material-inventaris-list";
+import { MaterialInventarisList } from "@/components/dashboard/pt-pks/material-inventaris/material-inventaris-list";
 
 export default function InventarisPage() {
   return (
@@ -163,35 +163,35 @@ Test alur lengkap:
 
 ```bash
 # 1. Test Material Inventaris
-POST /api/pt-pks/gudang/material-inventaris
-GET /api/pt-pks/gudang/material-inventaris
+POST /api/pt-pks/material-inventaris
+GET /api/pt-pks/material-inventaris
 
 # 2. Test Store Request Flow
-POST /api/pt-pks/gudang/store-request (create SR)
-POST /api/pt-pks/gudang/store-request/{id}/submit
-POST /api/pt-pks/gudang/store-request/{id}/approve
-GET /api/pt-pks/gudang/store-request/{id}/check-stock
+POST /api/pt-pks/store-request (create SR)
+POST /api/pt-pks/store-request/{id}/submit
+POST /api/pt-pks/store-request/{id}/approve
+GET /api/pt-pks/store-request/{id}/check-stock
 
 # 3. Test PR → PO Flow
-POST /api/pt-pks/gudang/purchase-request (dengan storeRequestId)
-POST /api/pt-pks/gudang/purchase-request/{id}/approve
-POST /api/pt-pks/gudang/purchase-order (dengan purchaseRequestId)
-POST /api/pt-pks/gudang/purchase-order/{id}/issue
+POST /api/pt-pks/purchase-request (dengan storeRequestId)
+POST /api/pt-pks/purchase-request/{id}/approve
+POST /api/pt-pks/purchase-order (dengan purchaseRequestId)
+POST /api/pt-pks/purchase-order/{id}/issue
 
 # 4. Test Penerimaan (Stock Increase)
-POST /api/pt-pks/gudang/penerimaan-barang (dengan purchaseOrderId)
-POST /api/pt-pks/gudang/penerimaan-barang/{id}/complete
+POST /api/pt-pks/penerimaan-barang (dengan purchaseOrderId)
+POST /api/pt-pks/penerimaan-barang/{id}/complete
 # Verify stock bertambah di material
 
 # 5. Test Pengeluaran (Stock Decrease)
-POST /api/pt-pks/gudang/pengeluaran-barang (dengan storeRequestId)
-POST /api/pt-pks/gudang/pengeluaran-barang/{id}/approve
-POST /api/pt-pks/gudang/pengeluaran-barang/{id}/issue
+POST /api/pt-pks/pengeluaran-barang (dengan storeRequestId)
+POST /api/pt-pks/pengeluaran-barang/{id}/approve
+POST /api/pt-pks/pengeluaran-barang/{id}/issue
 # Verify stock berkurang di material
 
 # 6. Test Inventory Transaction
-GET /api/pt-pks/gudang/inventory-transaction?type=summary
-GET /api/pt-pks/gudang/inventory-transaction?materialId={id}
+GET /api/pt-pks/inventory-transaction?type=summary
+GET /api/pt-pks/inventory-transaction?materialId={id}
 ```
 
 ## 🎯 Fitur Utama
@@ -255,7 +255,7 @@ Pengeluaran Barang: DRAFT → PENDING → APPROVED → COMPLETED
 
 ### Create Material
 ```typescript
-const material = await fetch('/api/pt-pks/gudang/material-inventaris', {
+const material = await fetch('/api/pt-pks/material-inventaris', {
   method: 'POST',
   body: JSON.stringify({
     partNumber: 'PART-001',
@@ -271,7 +271,7 @@ const material = await fetch('/api/pt-pks/gudang/material-inventaris', {
 
 ### Create Store Request
 ```typescript
-const sr = await fetch('/api/pt-pks/gudang/store-request', {
+const sr = await fetch('/api/pt-pks/store-request', {
   method: 'POST',
   body: JSON.stringify({
     divisi: 'Produksi',
@@ -286,7 +286,7 @@ const sr = await fetch('/api/pt-pks/gudang/store-request', {
 
 ### Complete Penerimaan (Update Stock)
 ```typescript
-const result = await fetch(`/api/pt-pks/gudang/penerimaan-barang/${id}/complete`, {
+const result = await fetch(`/api/pt-pks/penerimaan-barang/${id}/complete`, {
   method: 'POST',
   body: JSON.stringify({
     checkedBy: 'Admin Gudang'

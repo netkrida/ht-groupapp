@@ -1,6 +1,19 @@
-import { PenerimaanBarangList } from "@/components/dashboard/pt-pks/gudang/penerimaan-barang/penerimaan-barang-list";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { PenerimaanBarangList } from "@/components/dashboard/pt-pks/penerimaan-barang/penerimaan-barang-list";
 
 export default function PenerimaanBarangPage() {
+  const router = useRouter();
+
+  const handleCreateNew = () => {
+    router.push("/dashboard/pt-pks/gudang/penerimaan-barang/create");
+  };
+
+  const handleViewDetail = (id: string) => {
+    router.push(`/dashboard/pt-pks/gudang/penerimaan-barang/${id}`);
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="mb-6">
@@ -9,7 +22,10 @@ export default function PenerimaanBarangPage() {
           Penerimaan barang dari vendor dan update stock otomatis
         </p>
       </div>
-      <PenerimaanBarangList />
+      <PenerimaanBarangList 
+        onCreateNew={handleCreateNew}
+        onViewDetail={handleViewDetail}
+      />
     </div>
   );
 }

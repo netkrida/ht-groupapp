@@ -96,6 +96,7 @@ model Company {
     vendors Vendor[]
     pengirimanProduct PengirimanProduct[]
     stockMovements StockMovement[]
+    purchaseRequests PurchaseRequest[]
 
     @@index([code])
 }
@@ -787,8 +788,15 @@ enum StatusPurchaseRequest {
     PENDING         // Menunggu approval
     APPROVED        // Disetujui
     REJECTED        // Ditolak
-    PO_CREATED      // PO sudah dibuat
+    PO_CREATED      // PO sudah dibuat (untuk tipe PENGAJUAN_PO)
+    COMPLETED       // Selesai (untuk tipe PEMBELIAN_LANGSUNG setelah barang diterima)
     CANCELLED       // Dibatalkan
+}
+
+// Enum untuk tipe pembelian Purchase Request
+enum TipePembelianPR {
+    PEMBELIAN_LANGSUNG    // Direct purchase - langsung ke penerimaan barang
+    PENGAJUAN_PO          // Submit to PO - masuk ke PO untuk diproses
 }
 
 // Enum untuk status Purchase Order (PO)
@@ -867,23 +875,34 @@ model PurchaseRequest {
     companyId             String
     nomorPR               String                 @unique
     tanggalRequest        DateTime               @default(now())
+    tipePembelian         TipePembelianPR        @default(PENGAJUAN_PO) // Tipe pembelian
     storeRequestId        String?                @unique // Bisa dari SR atau buat manual
+    divisi                String?                // Divisi yang mengajukan
     requestedBy           String                 // Adm Gudang
     approvedBy            String?                // Head Office/Procurement
     tanggalApproval       DateTime?
+    
+    // Field khusus untuk pembelian langsung
+    vendorNameDirect      String?                // Nama vendor (untuk pembelian langsung)
+    vendorAddressDirect   String?                // Alamat vendor (untuk pembelian langsung)
+    vendorPhoneDirect     String?                // Telepon vendor (untuk pembelian langsung)
+    
     keterangan            String?
     status                StatusPurchaseRequest  @default(DRAFT)
     
     createdAt             DateTime               @default(now())
     updatedAt             DateTime               @updatedAt
     
+    company               Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
     storeRequest          StoreRequest?          @relation(fields: [storeRequestId], references: [id])
     items                 PurchaseRequestItem[]
     purchaseOrder         PurchaseOrder?
+    penerimaanBarang      PenerimaanBarang[]     // Relasi ke penerimaan barang (untuk pembelian langsung)
     
     @@index([companyId])
     @@index([tanggalRequest])
     @@index([status])
+    @@index([tipePembelian])
     @@index([storeRequestId])
 }
 
@@ -973,7 +992,8 @@ model PenerimaanBarang {
     companyId             String
     nomorPenerimaan       String                  @unique
     tanggalPenerimaan     DateTime                @default(now())
-    purchaseOrderId       String?
+    purchaseOrderId       String?                 // Dari PO (optional)
+    purchaseRequestId     String?                 // Dari PR langsung (optional)
     vendorId              String
     vendorName            String                  // Denormalisasi
     nomorSuratJalan       String?                 // Nomor surat jalan dari vendor
@@ -991,6 +1011,7 @@ model PenerimaanBarang {
     updatedAt             DateTime                @updatedAt
     
     purchaseOrder         PurchaseOrder?          @relation(fields: [purchaseOrderId], references: [id])
+    purchaseRequest       PurchaseRequest?        @relation(fields: [purchaseRequestId], references: [id])
     items                 PenerimaanBarangItem[]
     
     @@index([companyId])
@@ -998,6 +1019,7 @@ model PenerimaanBarang {
     @@index([status])
     @@index([vendorId])
     @@index([purchaseOrderId])
+    @@index([purchaseRequestId])
 }
 
 // Item Penerimaan Barang

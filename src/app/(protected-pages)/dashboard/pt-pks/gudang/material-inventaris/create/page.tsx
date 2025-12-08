@@ -1,4 +1,4 @@
-import { MaterialInventarisForm } from "@/components/dashboard/pt-pks/gudang/material-inventaris/material-inventaris-form";
+import { MaterialInventarisForm } from "@/components/dashboard/pt-pks/material-inventaris/material-inventaris-form";
 
 export default function CreateMaterialPage() {
   return (

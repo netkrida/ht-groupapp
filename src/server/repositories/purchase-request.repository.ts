@@ -1,10 +1,11 @@
 import { db } from "../db";
 import type { PurchaseRequestInput, UpdatePurchaseRequestInput } from "../schema/purchase-request";
-import { StatusPurchaseRequest } from "@prisma/client";
+import { StatusPurchaseRequest, TipePembelianPR } from "@prisma/client";
 
 export const purchaseRequestRepository = {
   async findAll(companyId: string, filters?: {
     status?: StatusPurchaseRequest;
+    tipePembelian?: TipePembelianPR;
     startDate?: Date;
     endDate?: Date;
   }) {
@@ -12,6 +13,9 @@ export const purchaseRequestRepository = {
     
     if (filters?.status) {
       where.status = filters.status;
+    }
+    if (filters?.tipePembelian) {
+      where.tipePembelian = filters.tipePembelian;
     }
     if (filters?.startDate || filters?.endDate) {
       where.tanggalRequest = {};
@@ -76,8 +80,13 @@ export const purchaseRequestRepository = {
       data: {
         companyId,
         nomorPR,
+        tipePembelian: data.tipePembelian as TipePembelianPR,
         storeRequestId: data.storeRequestId,
+        divisi: data.divisi,
         requestedBy: data.requestedBy,
+        vendorNameDirect: data.vendorNameDirect,
+        vendorAddressDirect: data.vendorAddressDirect,
+        vendorPhoneDirect: data.vendorPhoneDirect,
         keterangan: data.keterangan,
         items: {
           create: data.items.map(item => ({
@@ -106,7 +115,12 @@ export const purchaseRequestRepository = {
   async update(id: string, companyId: string, data: UpdatePurchaseRequestInput) {
     const updateData: any = {};
     
+    if (data.tipePembelian) updateData.tipePembelian = data.tipePembelian;
+    if (data.divisi !== undefined) updateData.divisi = data.divisi;
     if (data.requestedBy) updateData.requestedBy = data.requestedBy;
+    if (data.vendorNameDirect !== undefined) updateData.vendorNameDirect = data.vendorNameDirect;
+    if (data.vendorAddressDirect !== undefined) updateData.vendorAddressDirect = data.vendorAddressDirect;
+    if (data.vendorPhoneDirect !== undefined) updateData.vendorPhoneDirect = data.vendorPhoneDirect;
     if (data.keterangan !== undefined) updateData.keterangan = data.keterangan;
 
     // If items are provided, delete old items and create new ones
@@ -176,6 +190,56 @@ export const purchaseRequestRepository = {
   async delete(id: string, companyId: string) {
     return db.purchaseRequest.delete({
       where: { id, companyId },
+    });
+  },
+
+  // Get approved PRs yang siap untuk dijadikan PO (tipe PENGAJUAN_PO)
+  async findApprovedForPO(companyId: string) {
+    return db.purchaseRequest.findMany({
+      where: {
+        companyId,
+        tipePembelian: TipePembelianPR.PENGAJUAN_PO,
+        status: StatusPurchaseRequest.APPROVED,
+        purchaseOrder: null, // Belum ada PO yang dibuat
+      },
+      include: {
+        items: {
+          include: {
+            material: {
+              include: {
+                kategoriMaterial: true,
+                satuanMaterial: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { tanggalRequest: "desc" },
+    });
+  },
+
+  // Get approved PRs untuk pembelian langsung (siap untuk penerimaan barang)
+  async findApprovedDirectPurchase(companyId: string) {
+    return db.purchaseRequest.findMany({
+      where: {
+        companyId,
+        tipePembelian: TipePembelianPR.PEMBELIAN_LANGSUNG,
+        status: StatusPurchaseRequest.APPROVED,
+      },
+      include: {
+        items: {
+          include: {
+            material: {
+              include: {
+                kategoriMaterial: true,
+                satuanMaterial: true,
+              },
+            },
+          },
+        },
+        penerimaanBarang: true,
+      },
+      orderBy: { tanggalRequest: "desc" },
     });
   },
 

@@ -90,7 +90,7 @@ const companyMenus: Record<string, MenuItem[]> = {
     // ============ GUDANG / INVENTORY ============ 🆕 BARU!
     {
       title: "Gudang",
-      url: "/dashboard/pt-pks/gudang",
+      url: "/dashboard/pt-pks",
       icon: Warehouse,
       roles: ["Admin", "Staff Gudang"],
       items: [
