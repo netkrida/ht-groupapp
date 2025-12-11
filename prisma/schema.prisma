@@ -1160,3 +1160,70 @@ model InventoryTransaction {
     @@index([tipeTransaksi])
     @@index([vendorId])
 }
+
+// ============================================
+// MODUL PENGGAJIAN KARYAWAN
+// ============================================
+
+model PenggajianKaryawan {
+    id                    String   @id @default(cuid())
+    
+    // Periode Gaji
+    periodeBulan          Int      // 1-12
+    periodeTahun          Int      // 2024, 2025, etc
+    
+    // Identitas Karyawan (Column A-I from Excel)
+    no                    Int?     // NO
+    namaKaryawan          String   // NAMA KARYAWAN
+    tktk                  String?  // TK/K (Status keluarga)
+    gol                   String?  // GOL (Golongan)
+    nomorRekening         String?  // NOMOR REKENING
+    devisi                String?  // DEVISI
+    noBpjsTk              String?  // NO BPJS TK
+    noBpjsKesehatan       String?  // NO BPJS KESEHATAN
+    jabatan               String?  // JABATAN
+    
+    // Tanggal Olah TBS / Tanggal Kerja (1-31) - stored as JSON
+    // Format: { "1": "H", "2": "SC", "3": "OFF", ... }
+    tanggalKerja          Json?    // TANGGAL KERJA (kolom 1-31)
+    
+    // ========== HARI KERJA SECTION ==========
+    hk                    Int      @default(0)  // HK (Hari Kerja)
+    liburDibayar          Int      @default(0)  // Libur Dibayar
+    hkTidakDibayar        Int      @default(0)  // HK Tidak Dibayar
+    hkDibayar             Int      @default(0)  // HK Dibayar
+    lemburHari            Float    @default(0)  // Lembur (hari)
+    
+    // ========== GAJI (SALARY) ==========
+    gajiPokok             Decimal  @default(0) @db.Decimal(15, 0)  // Gaji Pokok
+    
+    // ========== TUNJANGAN ==========
+    tunjanganJabatan      Decimal  @default(0) @db.Decimal(15, 0)  // Tunjangan Jabatan
+    tunjanganPerumahan    Decimal  @default(0) @db.Decimal(15, 0)  // Tunjangan Perumahan
+    
+    // ========== OVERTIME ==========
+    overtime              Decimal  @default(0) @db.Decimal(15, 0)  // Overtime (rupiah)
+    
+    // ========== TOTAL SEBELUM POTONGAN ==========
+    totalSebelumPotongan  Decimal  @default(0) @db.Decimal(15, 0)  // Total (sebelum potongan)
+    
+    // ========== POTONGAN ==========
+    potKehadiran          Decimal  @default(0) @db.Decimal(15, 0)  // Potongan Kehadiran
+    potBpjsTkJht          Decimal  @default(0) @db.Decimal(15, 0)  // Potongan BPJS TK JHT
+    potBpjsTkJn           Decimal  @default(0) @db.Decimal(15, 0)  // Potongan BPJS TK JN
+    potBpjsKesehatan      Decimal  @default(0) @db.Decimal(15, 0)  // Potongan BPJS Kesehatan
+    potPph21              Decimal  @default(0) @db.Decimal(15, 0)  // Potongan PPH 21
+    
+    // ========== TOTAL POTONGAN ==========
+    totalPotongan         Decimal  @default(0) @db.Decimal(15, 0)  // Total Potongan
+    
+    // ========== UPAH DITERIMA (NET PAY) ==========
+    upahDiterima          Decimal  @default(0) @db.Decimal(15, 0)  // Upah Diterima
+    
+    createdAt             DateTime @default(now())
+    updatedAt             DateTime @updatedAt
+    
+    @@index([periodeBulan, periodeTahun])
+    @@index([namaKaryawan])
+    @@index([devisi])
+}

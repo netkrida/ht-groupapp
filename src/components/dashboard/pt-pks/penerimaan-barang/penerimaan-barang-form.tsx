@@ -109,11 +109,25 @@ export function PenerimaanBarangForm({ onSuccess }: { onSuccess: () => void }) {
 
   const fetchPurchaseOrders = async () => {
     try {
-      const response = await fetch("/api/pt-pks/purchase-order?status=ISSUED");
-      if (response.ok) {
-        const data = await response.json();
-        setPurchaseOrders(data);
+      // Fetch PO dengan status ISSUED atau PARTIAL_RECEIVED
+      const [issuedResponse, partialResponse] = await Promise.all([
+        fetch("/api/pt-pks/purchase-order?status=ISSUED"),
+        fetch("/api/pt-pks/purchase-order?status=PARTIAL_RECEIVED"),
+      ]);
+      
+      const allPOs: PurchaseOrder[] = [];
+      
+      if (issuedResponse.ok) {
+        const issuedData = await issuedResponse.json();
+        allPOs.push(...issuedData);
       }
+      
+      if (partialResponse.ok) {
+        const partialData = await partialResponse.json();
+        allPOs.push(...partialData);
+      }
+      
+      setPurchaseOrders(allPOs);
     } catch (error) {
       console.error("Error fetching purchase orders:", error);
     }
@@ -236,23 +250,27 @@ export function PenerimaanBarangForm({ onSuccess }: { onSuccess: () => void }) {
           }),
         });
       } else {
-        // Untuk PO, gunakan endpoint biasa
+        // Untuk PO, gunakan endpoint from-po yang langsung complete dan update stock
         if (!formData.vendorName) {
           toast.error("Vendor wajib diisi");
+          setLoading(false);
           return;
         }
 
         if (items.length === 0 || items.some((item) => item.jumlahDiterima <= 0)) {
           toast.error("Jumlah diterima harus lebih dari 0 untuk semua item");
+          setLoading(false);
           return;
         }
 
         if (items.some((item) => item.hargaSatuan <= 0)) {
           toast.error("Harga satuan harus lebih dari 0 untuk semua item");
+          setLoading(false);
           return;
         }
 
-        response = await fetch("/api/pt-pks/penerimaan-barang", {
+        // Use from-po endpoint for automatic completion and stock update
+        response = await fetch("/api/pt-pks/penerimaan-barang/from-po", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -279,7 +297,7 @@ export function PenerimaanBarangForm({ onSuccess }: { onSuccess: () => void }) {
       }
 
       if (response.ok) {
-        toast.success("Penerimaan Barang berhasil dibuat");
+        toast.success("Penerimaan Barang berhasil dibuat dan stock material telah diperbarui");
         onSuccess();
       } else {
         const error = await response.json();

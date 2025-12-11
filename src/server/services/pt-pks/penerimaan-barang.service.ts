@@ -224,6 +224,173 @@ export const penerimaanBarangService = {
     return penerimaanBarangRepository.delete(id, companyId);
   },
 
+  // Create and complete penerimaan barang from PO in one step
+  async createAndCompleteFromPO(
+    companyId: string,
+    data: PenerimaanBarangInput,
+    operator: string
+  ) {
+    // Validate PO
+    if (!data.purchaseOrderId) {
+      throw new Error("Purchase Order ID wajib diisi");
+    }
+
+    const po = await purchaseOrderRepository.findById(data.purchaseOrderId, companyId);
+    if (!po) {
+      throw new Error("Purchase Order tidak ditemukan");
+    }
+    if (po.status !== StatusPurchaseOrder.ISSUED && po.status !== StatusPurchaseOrder.PARTIAL_RECEIVED) {
+      throw new Error("Purchase Order harus sudah diterbitkan (ISSUED)");
+    }
+
+    // Validate materials
+    for (const item of data.items) {
+      const material = await materialInventarisRepository.findById(item.materialId, companyId);
+      if (!material) {
+        throw new Error(`Material dengan ID ${item.materialId} tidak ditemukan`);
+      }
+    }
+
+    // Generate nomor penerimaan
+    const nomorPenerimaan = await penerimaanBarangRepository.generateNomorPenerimaan(companyId);
+
+    // Use transaction to ensure atomicity
+    return db.$transaction(async (tx) => {
+      // Create penerimaan barang with COMPLETED status
+      const penerimaanBarang = await tx.penerimaanBarang.create({
+        data: {
+          companyId,
+          nomorPenerimaan,
+          purchaseOrderId: data.purchaseOrderId,
+          vendorId: data.vendorId,
+          vendorName: data.vendorName,
+          tanggalPenerimaan: new Date(),
+          nomorSuratJalan: data.nomorSuratJalan,
+          tanggalSuratJalan: data.tanggalSuratJalan ? new Date(data.tanggalSuratJalan) : undefined,
+          nomorInvoice: data.nomorInvoice,
+          tanggalInvoice: data.tanggalInvoice ? new Date(data.tanggalInvoice) : undefined,
+          receivedBy: data.receivedBy,
+          checkedBy: operator,
+          keterangan: data.keterangan,
+          status: StatusPenerimaanBarang.COMPLETED,
+          items: {
+            create: data.items.map(item => ({
+              materialId: item.materialId,
+              purchaseOrderItemId: item.purchaseOrderItemId,
+              jumlahDiterima: item.jumlahDiterima,
+              hargaSatuan: item.hargaSatuan,
+              totalHarga: item.jumlahDiterima * item.hargaSatuan,
+              lokasiPenyimpanan: item.lokasiPenyimpanan,
+              keterangan: item.keterangan,
+            })),
+          },
+        },
+        include: {
+          items: {
+            include: {
+              material: {
+                include: {
+                  kategoriMaterial: true,
+                  satuanMaterial: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Update stock and create inventory transactions for each item
+      for (const item of data.items) {
+        // Get current stock
+        const material = await tx.materialInventaris.findUnique({
+          where: { id: item.materialId },
+        });
+
+        if (!material) {
+          throw new Error(`Material ${item.materialId} tidak ditemukan`);
+        }
+
+        const newStock = material.stockOnHand + item.jumlahDiterima;
+
+        // Update material stock
+        await tx.materialInventaris.update({
+          where: { id: item.materialId },
+          data: { stockOnHand: newStock },
+        });
+
+        // Create inventory transaction
+        await tx.inventoryTransaction.create({
+          data: {
+            companyId,
+            materialId: item.materialId,
+            tipeTransaksi: TipeMovement.IN,
+            referensi: nomorPenerimaan,
+            vendorId: data.vendorId,
+            vendorName: data.vendorName,
+            jumlahMasuk: item.jumlahDiterima,
+            jumlahKeluar: 0,
+            stockOnHand: newStock,
+            hargaSatuan: item.hargaSatuan,
+            totalHarga: item.jumlahDiterima * item.hargaSatuan,
+            keterangan: `Penerimaan Barang dari PO ${po.nomorPO} - ${data.vendorName}`,
+            operator,
+          },
+        });
+
+        // Update PO item received quantity
+        if (item.purchaseOrderItemId) {
+          const poItem = await tx.purchaseOrderItem.findUnique({
+            where: { id: item.purchaseOrderItemId },
+          });
+
+          if (poItem) {
+            await tx.purchaseOrderItem.update({
+              where: { id: item.purchaseOrderItemId },
+              data: {
+                jumlahDiterima: poItem.jumlahDiterima + item.jumlahDiterima,
+              },
+            });
+          }
+        }
+      }
+
+      // Check and update PO status
+      const updatedPO = await tx.purchaseOrder.findUnique({
+        where: { id: data.purchaseOrderId },
+        include: { items: true },
+      });
+
+      if (updatedPO) {
+        // Recalculate with updated jumlahDiterima
+        const allItemsReceived = updatedPO.items.every(poItem => {
+          const receivedItem = data.items.find(i => i.purchaseOrderItemId === poItem.id);
+          const additionalReceived = receivedItem?.jumlahDiterima ?? 0;
+          return (poItem.jumlahDiterima + additionalReceived) >= poItem.jumlahOrder;
+        });
+
+        const someItemsReceived = updatedPO.items.some(poItem => {
+          const receivedItem = data.items.find(i => i.purchaseOrderItemId === poItem.id);
+          const additionalReceived = receivedItem?.jumlahDiterima ?? 0;
+          return (poItem.jumlahDiterima + additionalReceived) > 0;
+        });
+
+        if (allItemsReceived) {
+          await tx.purchaseOrder.update({
+            where: { id: data.purchaseOrderId },
+            data: { status: StatusPurchaseOrder.COMPLETED },
+          });
+        } else if (someItemsReceived) {
+          await tx.purchaseOrder.update({
+            where: { id: data.purchaseOrderId },
+            data: { status: StatusPurchaseOrder.PARTIAL_RECEIVED },
+          });
+        }
+      }
+
+      return penerimaanBarang;
+    });
+  },
+
   async createFromPR(
     companyId: string,
     purchaseRequestId: string,

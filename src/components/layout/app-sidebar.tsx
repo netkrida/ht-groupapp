@@ -118,6 +118,16 @@ const companyMenus: Record<string, MenuItem[]> = {
         { title: "Pengiriman Product", url: "/dashboard/pt-pks/pemasaran/pengiriman-product" },
       ],
     },
+
+    {
+      title: "Payroll",
+      url: "/dashboard/pt-pks/payroll",
+      icon: Database,
+      roles: ["Admin", "Manager HR", "Staff HR"],
+      items: [
+        { title: "Penggajian", url: "/dashboard/pt-pks/payroll/penggajian" },
+      ],
+    },
     
     {
       title: "Keuangan",
