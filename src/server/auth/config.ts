@@ -242,6 +242,7 @@ export const authConfig = {
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
+        domain: "htgroup.id"
       },
     },
     callbackUrl: {
@@ -254,6 +255,7 @@ export const authConfig = {
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
+        domain: "htgroup.id"
       },
     },
     csrfToken: {
@@ -266,6 +268,7 @@ export const authConfig = {
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
+        domain: "htgroup.id"
       },
     },
   },
