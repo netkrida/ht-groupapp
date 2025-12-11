@@ -47,8 +47,13 @@ COPY --chown=node:node package.json package-lock.json* ./
 COPY --chown=node:node --from=deps /app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /app/prisma ./prisma
 COPY --chown=node:node --from=builder /app/public ./public
-COPY --chown=node:node --from=builder /app/.next/standalone ./
-COPY --chown=node:node --from=builder /app/.next/static ./.next/static
+
+# Jika menggunakan Next.js output: 'standalone', gunakan baris di bawah ini (dan pastikan next.config.js sudah benar):
+# COPY --chown=node:node --from=builder /app/.next/standalone ./
+# COPY --chown=node:node --from=builder /app/.next/static ./.next/static
+
+# Jika tidak, fallback ke copy seluruh .next (lebih kompatibel):
+COPY --chown=node:node --from=builder /app/.next ./.next
 
 RUN npm install --global --save-exact "prisma@$(node --print 'require(\"./node_modules/@prisma/client/package.json\").version')"
 
