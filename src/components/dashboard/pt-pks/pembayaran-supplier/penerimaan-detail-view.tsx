@@ -23,6 +23,8 @@ type PenerimaanData = {
   beratNetto2: number;
   hargaPerKg: number;
   totalBayar: number;
+  upahBongkar: number;
+  totalUpahBongkar: number;
   status: string;
   supplier: {
     id: string;
@@ -278,6 +280,35 @@ export function PenerimaanDetailView({ data, onBack, onRefresh }: Props) {
                     currency: "IDR",
                     minimumFractionDigits: 0,
                   }).format(data.hargaPerKg)}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-muted/30 p-4 rounded-lg">
+                  <div className="text-sm text-muted-foreground mb-2">Upah Bongkar per Kilogram</div>
+                  <div className="text-xl font-bold">
+                    {new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                    }).format(data.upahBongkar)}
+                  </div>
+                </div>
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <div className="text-sm text-orange-700 mb-2">Total Upah Bongkar</div>
+                  <div className="text-xl font-bold text-orange-900">
+                    {new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                    }).format(data.totalUpahBongkar)}
+                  </div>
+                  <div className="text-xs text-orange-600 mt-1">
+                    {data.beratNetto2.toLocaleString("id-ID", { minimumFractionDigits: 2 })} kg × {" "}
+                    {new Intl.NumberFormat("id-ID", {
+                      minimumFractionDigits: 0,
+                    }).format(data.upahBongkar)}
+                  </div>
                 </div>
               </div>
 

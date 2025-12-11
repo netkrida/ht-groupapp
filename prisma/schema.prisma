@@ -351,6 +351,10 @@ model PenerimaanTBS {
     hargaPerKg        Float
     totalBayar        Float            // netto2 * hargaPerKg
     
+    // Upah Bongkar
+    upahBongkar       Float            @default(16) // upah per kg
+    totalUpahBongkar  Float            @default(0)  // netto2 * upahBongkar
+    
     status            StatusPenerimaan @default(DRAFT)
     
     createdAt         DateTime         @default(now())

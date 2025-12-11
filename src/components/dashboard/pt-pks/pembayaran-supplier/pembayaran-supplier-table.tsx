@@ -39,6 +39,8 @@ type PembayaranData = {
   beratNetto2: number;
   hargaPerKg: number;
   totalBayar: number;
+  upahBongkar: number;
+  totalUpahBongkar: number;
   status: string;
   supplier: {
     id: string;
@@ -136,10 +138,11 @@ export function PembayaranSupplierTable() {
   const calculateTotals = () => {
     const totalBerat = filteredData.reduce((sum, item) => sum + item.beratNetto2, 0);
     const totalPembayaran = filteredData.reduce((sum, item) => sum + item.totalBayar, 0);
-    return { totalBerat, totalPembayaran };
+    const totalUpahBongkar = filteredData.reduce((sum, item) => sum + item.totalUpahBongkar, 0);
+    return { totalBerat, totalPembayaran, totalUpahBongkar };
   };
 
-  const { totalBerat, totalPembayaran } = calculateTotals();
+  const { totalBerat, totalPembayaran, totalUpahBongkar } = calculateTotals();
 
   const exportToCSV = () => {
     const headers = [
@@ -161,6 +164,8 @@ export function PembayaranSupplierTable() {
       "Berat Netto 2 (kg)",
       "Harga/kg",
       "Total Bayar",
+      "Upah Bongkar/kg",
+      "Total Upah Bongkar",
     ];
 
     const rows = filteredData.map((item) => [
@@ -182,6 +187,8 @@ export function PembayaranSupplierTable() {
       item.beratNetto2,
       item.hargaPerKg,
       item.totalBayar,
+      item.upahBongkar,
+      item.totalUpahBongkar,
     ]);
 
     const csvContent = [
@@ -391,6 +398,8 @@ export function PembayaranSupplierTable() {
                     <TableHead className="text-right">Netto 2 (kg)</TableHead>
                     <TableHead className="text-right">Harga/kg</TableHead>
                     <TableHead className="text-right">Total Bayar</TableHead>
+                    <TableHead className="text-right">Upah/kg</TableHead>
+                    <TableHead className="text-right">Total Upah</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-center">Aksi</TableHead>
                   </TableRow>
@@ -398,7 +407,7 @@ export function PembayaranSupplierTable() {
                 <TableBody>
                   {filteredData.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={15} className="text-center py-8 text-muted-foreground">
                         {data.length === 0
                           ? "Belum ada data penerimaan TBS"
                           : "Tidak ada data yang sesuai dengan filter"}
@@ -471,6 +480,18 @@ export function PembayaranSupplierTable() {
                             minimumFractionDigits: 0,
                           }).format(item.totalBayar)}
                         </TableCell>
+                        <TableCell className="text-right font-mono text-sm">
+                          {new Intl.NumberFormat("id-ID", {
+                            minimumFractionDigits: 0,
+                          }).format(item.upahBongkar)}
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-orange-600">
+                          {new Intl.NumberFormat("id-ID", {
+                            style: "currency",
+                            currency: "IDR",
+                            minimumFractionDigits: 0,
+                          }).format(item.totalUpahBongkar)}
+                        </TableCell>
                         <TableCell>
                           <Badge
                             variant={
@@ -528,6 +549,16 @@ export function PembayaranSupplierTable() {
                       currency: "IDR",
                       minimumFractionDigits: 0,
                     }).format(totalPembayaran)}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground">Total Upah Bongkar</div>
+                  <div className="font-bold text-orange-600 text-lg">
+                    {new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                    }).format(totalUpahBongkar)}
                   </div>
                 </div>
               </div>

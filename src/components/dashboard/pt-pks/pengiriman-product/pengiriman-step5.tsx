@@ -21,6 +21,7 @@ export function PengirimanStep5({ data, onUpdate, onSubmit, onBack, loading }: S
     ffa: data.ffa || 0,
     air: data.air || 0,
     kotoran: data.kotoran || 0,
+    nomorSegel: data.nomorSegel || "",
   });
 
   const beratNetto = (data.beratGross || 0) - (data.beratTarra || 0);
@@ -38,12 +39,17 @@ export function PengirimanStep5({ data, onUpdate, onSubmit, onBack, loading }: S
       alert("Kadar kotoran harus antara 0-100%");
       return;
     }
+    if (!formData.nomorSegel.trim()) {
+      alert("Nomor segel harus diisi");
+      return;
+    }
 
     // Pass data mutu langsung ke onSubmit
     onSubmit({
       ffa: formData.ffa,
       air: formData.air,
       kotoran: formData.kotoran,
+      nomorSegel: formData.nomorSegel,
     });
   };
 
@@ -123,9 +129,19 @@ export function PengirimanStep5({ data, onUpdate, onSubmit, onBack, loading }: S
           </div>
         </div>
 
-        <div className="bg-muted p-3 rounded-lg">
-          <p className="text-sm text-muted-foreground mb-1">
-            <strong>Catatan:</strong> Nomor segel akan di-generate otomatis oleh sistem
+        <div className="space-y-2">
+          <Label htmlFor="nomorSegel">Nomor Segel *</Label>
+          <Input
+            id="nomorSegel"
+            type="text"
+            placeholder="Masukkan nomor segel"
+            value={formData.nomorSegel}
+            onChange={(e) =>
+              setFormData({ ...formData, nomorSegel: e.target.value })
+            }
+          />
+          <p className="text-sm text-muted-foreground">
+            Nomor segel yang tertera pada kemasan/tangki pengiriman
           </p>
         </div>
       </div>
@@ -185,7 +201,7 @@ export function PengirimanStep5({ data, onUpdate, onSubmit, onBack, loading }: S
           <li>Stock product akan dikurangi sebesar {beratNetto.toLocaleString("id-ID")} Kg</li>
           <li>Kuantitas kontrak akan dikurangi</li>
           <li>Stock movement akan tercatat</li>
-          <li>Nomor segel akan di-generate</li>
+          <li>Nomor segel: <strong>{formData.nomorSegel || "-"}</strong></li>
         </ul>
       </div>
 

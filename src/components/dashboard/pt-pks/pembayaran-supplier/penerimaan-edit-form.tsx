@@ -23,6 +23,8 @@ type PenerimaanData = {
   beratNetto2: number;
   hargaPerKg: number;
   totalBayar: number;
+  upahBongkar: number;
+  totalUpahBongkar: number;
   status: string;
   supplier: {
     id: string;
@@ -58,12 +60,14 @@ export function PenerimaanEditForm({ data, onCancel, onSuccess }: Props) {
     beratTarra: data.beratTarra,
     potonganPersen: data.potonganPersen,
     hargaPerKg: data.hargaPerKg,
+    upahBongkar: data.upahBongkar || 16,
   });
 
   const beratNetto1 = formData.beratBruto - formData.beratTarra;
   const potonganKg = (beratNetto1 * formData.potonganPersen) / 100;
   const beratNetto2 = beratNetto1 - potonganKg;
   const totalBayar = beratNetto2 * formData.hargaPerKg;
+  const totalUpahBongkar = beratNetto2 * formData.upahBongkar;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +82,7 @@ export function PenerimaanEditForm({ data, onCancel, onSuccess }: Props) {
         beratTarra: formData.beratTarra,
         potonganPersen: formData.potonganPersen,
         hargaPerKg: formData.hargaPerKg,
+        upahBongkar: formData.upahBongkar,
       };
 
       const res = await fetch("/api/pt-pks/penerimaan-tbs", {
@@ -260,13 +265,27 @@ export function PenerimaanEditForm({ data, onCancel, onSuccess }: Props) {
                     }
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="upahBongkar">Upah Bongkar per Kg (Rp)</Label>
+                  <Input
+                    id="upahBongkar"
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={formData.upahBongkar}
+                    onChange={(e) =>
+                      setFormData({ ...formData, upahBongkar: parseFloat(e.target.value) || 0 })
+                    }
+                  />
+                </div>
               </div>
             </div>
 
             {/* Kalkulasi Otomatis */}
             <div className="space-y-4 bg-muted/30 p-4 rounded-lg">
               <h3 className="font-semibold text-lg">Kalkulasi Otomatis</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
                   <div className="text-sm text-muted-foreground">Berat Netto 1</div>
                   <div className="font-bold text-blue-600">
@@ -296,6 +315,16 @@ export function PenerimaanEditForm({ data, onCancel, onSuccess }: Props) {
                       currency: "IDR",
                       minimumFractionDigits: 0,
                     }).format(totalBayar)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Total Upah Bongkar</div>
+                  <div className="font-bold text-orange-600 text-lg">
+                    {new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                    }).format(totalUpahBongkar)}
                   </div>
                 </div>
               </div>

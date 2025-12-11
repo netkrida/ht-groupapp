@@ -33,12 +33,14 @@ export type PenerimaanFormData = {
   
   // Step 4
   hargaPerKg: number;
+  upahBongkar?: number;
   
   // Calculated fields
   beratNetto1?: number;
   potonganKg?: number;
   beratNetto2?: number;
   totalBayar?: number;
+  totalUpahBongkar?: number;
 };
 
 export function PenerimaanTBSWizard() {
@@ -51,6 +53,7 @@ export function PenerimaanTBSWizard() {
     beratBruto: 0,
     beratTarra: 0,
     hargaPerKg: 0,
+    upahBongkar: 16,
   });
   const [loading, setLoading] = useState(false);
 

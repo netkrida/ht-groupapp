@@ -34,6 +34,7 @@ export const penerimaanStep3Schema = z.object({
 // Schema untuk Step 4 - Harga
 export const penerimaanStep4Schema = z.object({
   hargaPerKg: z.number().min(0, "Harga per kg harus lebih dari 0"),
+  upahBongkar: z.number().min(0, "Upah bongkar harus lebih dari 0").default(16),
 });
 
 // Schema lengkap untuk create
@@ -60,6 +61,7 @@ export const createPenerimaanTBSSchema = z.object({
   
   // Step 4
   hargaPerKg: z.number().min(0, "Harga per kg harus lebih dari 0"),
+  upahBongkar: z.number().min(0, "Upah bongkar harus lebih dari 0").default(16),
   
   status: z.enum(["DRAFT", "COMPLETED", "CANCELLED"]).optional(),
 });

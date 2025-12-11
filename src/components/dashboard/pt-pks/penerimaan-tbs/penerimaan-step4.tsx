@@ -34,6 +34,7 @@ type Material = {
 export function PenerimaanStep4({ data, onUpdate, onSubmit, onBack, loading }: Step4Props) {
   // Use parent data directly instead of local state
   const hargaPerKg = data.hargaPerKg || 0;
+  const upahBongkar = data.upahBongkar ?? 16; // Default 16
 
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [material, setMaterial] = useState<Material | null>(null);
@@ -48,6 +49,7 @@ export function PenerimaanStep4({ data, onUpdate, onSubmit, onBack, loading }: S
   const potonganKg = data.potonganKg || 0;
   const beratNetto2 = data.beratNetto2 || 0;
   const totalBayar = beratNetto2 * hargaPerKg;
+  const totalUpahBongkar = beratNetto2 * upahBongkar;
 
   useEffect(() => {
     // Fetch all details for preview
@@ -112,10 +114,16 @@ export function PenerimaanStep4({ data, onUpdate, onSubmit, onBack, loading }: S
       alert("Harga per kg harus lebih dari 0");
       return;
     }
+    if (upahBongkar < 0) {
+      alert("Upah bongkar tidak boleh negatif");
+      return;
+    }
 
     onUpdate({
       hargaPerKg,
+      upahBongkar,
       totalBayar,
+      totalUpahBongkar,
     });
     onSubmit();
   };
@@ -159,6 +167,40 @@ export function PenerimaanStep4({ data, onUpdate, onSubmit, onBack, loading }: S
                   currency: "IDR",
                   minimumFractionDigits: 0,
                 }).format(hargaPerKg)} per kilogram
+              </p>
+            )}
+          </div>
+
+          {/* Upah Bongkar */}
+          <div className="space-y-2">
+            <Label htmlFor="upahBongkar">Upah Bongkar per Kilogram</Label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                Rp
+              </div>
+              <Input
+                id="upahBongkar"
+                type="number"
+                step="1"
+                min="0"
+                placeholder="16"
+                value={upahBongkar || ""}
+                onChange={(e) =>
+                  onUpdate({ upahBongkar: parseFloat(e.target.value) || 0 })
+                }
+                className="text-right text-lg font-semibold pl-12 pr-16"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                / kg
+              </div>
+            </div>
+            {upahBongkar > 0 && (
+              <p className="text-sm text-muted-foreground">
+                Total Upah Bongkar: {new Intl.NumberFormat("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
+                  minimumFractionDigits: 0,
+                }).format(totalUpahBongkar)}
               </p>
             )}
           </div>
@@ -343,6 +385,31 @@ export function PenerimaanStep4({ data, onUpdate, onSubmit, onBack, loading }: S
                     currency: "IDR",
                     minimumFractionDigits: 0,
                   }).format(hargaPerKg)}
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide">Upah Bongkar per kg</div>
+                <div className="font-bold text-lg">
+                  {new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    minimumFractionDigits: 0,
+                  }).format(upahBongkar)}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide">Total Upah Bongkar</div>
+                <div className="font-bold text-lg text-orange-600">
+                  {new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    minimumFractionDigits: 0,
+                  }).format(totalUpahBongkar)}
                 </div>
               </div>
             </div>

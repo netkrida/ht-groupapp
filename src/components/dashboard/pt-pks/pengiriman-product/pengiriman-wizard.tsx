@@ -34,6 +34,7 @@ export type PengirimanFormData = {
   ffa: number;
   air: number;
   kotoran: number;
+  nomorSegel?: string;
   
   // Calculated fields
   beratNetto?: number;

@@ -37,17 +37,24 @@ export class PenerimaanTBSRepository {
     const potonganKg = (beratNetto1 * data.potonganPersen) / 100;
     const beratNetto2 = beratNetto1 - potonganKg;
     const totalBayar = beratNetto2 * data.hargaPerKg;
+    const upahBongkarValue = data.upahBongkar ?? 16; // Default 16
+    const totalUpahBongkar = beratNetto2 * upahBongkarValue;
+
+    // Extract fields we don't want to spread (calculated or non-db fields)
+    const { upahBongkar: _, ...restData } = data;
 
     return db.penerimaanTBS.create({
       data: {
         companyId,
         nomorPenerimaan,
-        ...data,
+        ...restData,
         transporterId: data.transporterId!, // pastikan string
         beratNetto1,
         potonganKg,
         beratNetto2,
         totalBayar,
+        upahBongkar: upahBongkarValue,
+        totalUpahBongkar,
       },
       include: {
         material: {
@@ -130,10 +137,10 @@ export class PenerimaanTBSRepository {
 
   async updatePenerimaanTBS(id: string, data: UpdatePenerimaanTBSInput) {
     // Recalculate if necessary fields are provided
-    let updateData: any = { ...data };
+    const updateData: Record<string, unknown> = { ...data };
 
-    if (data.beratBruto !== undefined || data.beratTarra !== undefined) {
-      const current = await this.getPenerimaanTBSById(id);
+    if (data.beratBruto !== undefined || data.beratTarra !== undefined || data.potonganPersen !== undefined || data.hargaPerKg !== undefined || data.upahBongkar !== undefined) {
+      const current = await db.penerimaanTBS.findUnique({ where: { id } });
       if (!current) throw new Error("Penerimaan TBS tidak ditemukan");
 
       const beratBruto = data.beratBruto ?? current.beratBruto;
@@ -150,6 +157,9 @@ export class PenerimaanTBSRepository {
 
       const hargaPerKg = data.hargaPerKg ?? current.hargaPerKg;
       updateData.totalBayar = beratNetto2 * hargaPerKg;
+
+      const upahBongkar = data.upahBongkar ?? current.upahBongkar;
+      updateData.totalUpahBongkar = beratNetto2 * upahBongkar;
     }
 
     return db.penerimaanTBS.update({
